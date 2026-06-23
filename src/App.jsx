@@ -1,0 +1,1250 @@
+// ============================================================
+// GEOFENCE ALERT SYSTEM — Complete Dashboard (App.jsx)
+// Stack: React + Vite + Tailwind CSS + Recharts + Lucide
+// All UI, state, API calls, and routing in one file.
+// ============================================================
+
+
+// Add these imports at the top of App.jsx
+import { db } from './firebase';
+import {
+  collection, onSnapshot, doc, updateDoc,
+  addDoc, deleteDoc, serverTimestamp, query, orderBy, limit
+} from 'firebase/firestore';
+
+
+import { useState, useEffect, useCallback, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  LayoutDashboard, MapPin, Bell, Cpu, FileDown,
+  Truck, AlertTriangle, CheckCircle, XCircle, RefreshCw,
+  Plus, Trash2, Eye, EyeOff, Wifi, WifiOff, Moon, Sun,
+  TrendingUp, Activity, Clock, Filter, Search, X,
+  ChevronRight, Zap, Shield, Settings, Menu,
+} from "lucide-react";
+import {
+  LineChart, Line, BarChart, Bar, XAxis, YAxis,
+  CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend,
+} from "recharts";
+
+// ─────────────────────────────────────────────
+// CONFIG  — point to your backend
+// ─────────────────────────────────────────────
+const API = "http://localhost:4000/api";
+
+// ─────────────────────────────────────────────
+// MOCK DATA  (used when backend is offline)
+// ─────────────────────────────────────────────
+const MOCK_DEVICES = [
+  { id: 1, device_id: "TRUCK-001", name: "Alpha Hauler", type: "vehicle", status: "inside",  last_seen: new Date(Date.now() - 120000).toISOString(), owner_name: "Ravi Kumar",  last_lat: 17.385, last_lng: 78.486 },
+  { id: 2, device_id: "TRUCK-002", name: "Beta Carrier", type: "vehicle", status: "outside", last_seen: new Date(Date.now() - 340000).toISOString(), owner_name: "Suresh Babu", last_lat: 17.361, last_lng: 78.474 },
+  { id: 3, device_id: "VAN-001",   name: "Delta Van",   type: "vehicle", status: "inside",  last_seen: new Date(Date.now() -  45000).toISOString(), owner_name: "Priya Rao",  last_lat: 17.390, last_lng: 78.490 },
+  { id: 4, device_id: "PERS-001",  name: "Site Guard A",type: "personnel",status:"inside",  last_seen: new Date(Date.now() -  80000).toISOString(), owner_name: "Anand Singh",last_lat: 17.388, last_lng: 78.492 },
+  { id: 5, device_id: "TRUCK-003", name: "Gamma Rig",   type: "vehicle", status: "unknown", last_seen: new Date(Date.now()-3600000).toISOString(), owner_name: "Kiran Reddy", last_lat: null,   last_lng: null  },
+];
+
+const MOCK_GEOFENCES = [
+  { id: 1, name: "Main Depot",     shape: "circle",  center_lat: 17.385, center_lng: 78.486, radius_m: 500,  is_active: true  },
+  { id: 2, name: "Client Site A",  shape: "circle",  center_lat: 17.361, center_lng: 78.474, radius_m: 300,  is_active: true  },
+  { id: 3, name: "Restricted Zone",shape: "circle",  center_lat: 17.400, center_lng: 78.500, radius_m: 200,  is_active: false },
+];
+
+const MOCK_ALERTS = [
+  { id: 1, device_name: "Alpha Hauler",  device_id: "TRUCK-001", geofence_name: "Main Depot",    alert_type: "ENTRY",  priority: "medium",   triggered_at: new Date(Date.now() - 120000).toISOString(),  is_read: false, notified_via: "email",     lat: 17.385, lng: 78.486 },
+  { id: 2, device_name: "Beta Carrier",  device_id: "TRUCK-002", geofence_name: "Client Site A", alert_type: "EXIT",   priority: "high",     triggered_at: new Date(Date.now() - 340000).toISOString(),  is_read: false, notified_via: "email",     lat: 17.361, lng: 78.474 },
+  { id: 3, device_name: "Delta Van",     device_id: "VAN-001",   geofence_name: "Main Depot",    alert_type: "ENTRY",  priority: "medium",   triggered_at: new Date(Date.now() - 900000).toISOString(),  is_read: true,  notified_via: "email",     lat: 17.390, lng: 78.490 },
+  { id: 4, device_name: "Site Guard A",  device_id: "PERS-001",  geofence_name: "Main Depot",    alert_type: "EXIT",   priority: "critical", triggered_at: new Date(Date.now()-1800000).toISOString(),   is_read: false, notified_via: "email",     lat: 17.388, lng: 78.492 },
+  { id: 5, device_name: "Gamma Rig",     device_id: "TRUCK-003", geofence_name: "Client Site A", alert_type: "EXIT",   priority: "high",     triggered_at: new Date(Date.now()-3600000).toISOString(),   is_read: true,  notified_via: "none",      lat: 17.400, lng: 78.500 },
+  { id: 6, device_name: "Alpha Hauler",  device_id: "TRUCK-001", geofence_name: "Restricted Zone",alert_type:"ENTRY", priority: "critical", triggered_at: new Date(Date.now()-7200000).toISOString(),   is_read: true,  notified_via: "email",     lat: 17.400, lng: 78.500 },
+];
+
+const MOCK_CHART_DATA = [
+  { hour: "00:00", entries: 1, exits: 0 },
+  { hour: "02:00", entries: 0, exits: 1 },
+  { hour: "06:00", entries: 3, exits: 1 },
+  { hour: "08:00", entries: 5, exits: 2 },
+  { hour: "10:00", entries: 4, exits: 3 },
+  { hour: "12:00", entries: 6, exits: 4 },
+  { hour: "14:00", entries: 3, exits: 5 },
+  { hour: "16:00", entries: 7, exits: 2 },
+  { hour: "18:00", entries: 2, exits: 6 },
+  { hour: "20:00", entries: 1, exits: 3 },
+  { hour: "22:00", entries: 0, exits: 1 },
+];
+
+const MOCK_AI_REPORT = {
+  summary: "Today saw 6 geofence events across 4 devices. Alpha Hauler triggered a critical entry into the Restricted Zone at 14:00. Beta Carrier exited Client Site A unexpectedly at 16:20. Overall fleet compliance stands at 72%.",
+  suggestions: [
+    "Immediately investigate Alpha Hauler's entry into Restricted Zone — contact driver Ravi Kumar.",
+    "Review Beta Carrier's route deviation from Client Site A and update schedule in dispatch.",
+    "Schedule maintenance check for Gamma Rig which has been offline for 1+ hours.",
+  ],
+  anomalies: "Gamma Rig (TRUCK-003) has been unreachable for over 1 hour — possible GPS device failure or unauthorized removal.",
+};
+
+// ─────────────────────────────────────────────
+// HELPERS
+// ─────────────────────────────────────────────
+const timeAgo = (iso) => {
+  if (!iso) return "Never";
+  const sec = Math.floor((Date.now() - new Date(iso)) / 1000);
+  if (sec < 60)   return `${sec}s ago`;
+  if (sec < 3600) return `${Math.floor(sec / 60)}m ago`;
+  if (sec < 86400)return `${Math.floor(sec / 3600)}h ago`;
+  return new Date(iso).toLocaleDateString();
+};
+
+const priorityColor = (p) => ({
+  critical: "text-red-400 bg-red-500/10 border-red-500/30",
+  high:     "text-orange-400 bg-orange-500/10 border-orange-500/30",
+  medium:   "text-yellow-400 bg-yellow-500/10 border-yellow-500/30",
+  low:      "text-green-400 bg-green-500/10 border-green-500/30",
+}[p] || "text-slate-400 bg-slate-500/10 border-slate-500/30");
+
+const statusDot = (s) => ({
+  inside:  "bg-emerald-400 shadow-emerald-400/50",
+  outside: "bg-red-400 shadow-red-400/50",
+  unknown: "bg-slate-400",
+}[s] || "bg-slate-400");
+
+const alertIcon = (type) =>
+  type === "ENTRY"
+    ? <CheckCircle className="w-4 h-4 text-emerald-400" />
+    : <XCircle className="w-4 h-4 text-red-400" />;
+
+function exportCSV(rows) {
+  if (!rows.length) return;
+  const keys = Object.keys(rows[0]);
+  const csv  = [keys.join(","), ...rows.map(r => keys.map(k => JSON.stringify(r[k] ?? "")).join(","))].join("\n");
+  const a    = document.createElement("a");
+  a.href     = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
+  a.download = `geofence-alerts-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+}
+
+// ─────────────────────────────────────────────
+// API LAYER
+// ─────────────────────────────────────────────
+async function apiFetch(path, opts = {}) {
+  try {
+    const r = await fetch(`${API}${path}`, {
+      headers: { "Content-Type": "application/json" },
+      ...opts,
+    });
+    let data;
+    try {
+      data = await r.json();
+    } catch {
+      data = null;
+    }
+    if (!r.ok) {
+      return { error: data?.error || data?.message || `HTTP ${r.status}: ${r.statusText}` };
+    }
+    return data;
+  } catch (err) {
+    return { error: err.message || "Network Error: Backend might be offline." };
+  }
+}
+
+// ─────────────────────────────────────────────
+// COMPONENTS
+// ─────────────────────────────────────────────
+
+/** Sidebar navigation */
+function Sidebar({ active, setActive, dark, toggleDark, collapsed, setCollapsed }) {
+  const nav = [
+    { id: "dashboard",  label: "Dashboard",  icon: LayoutDashboard },
+    { id: "devices",    label: "Devices",    icon: Truck            },
+    { id: "geofences",  label: "Geofences",  icon: MapPin           },
+    { id: "alerts",     label: "Alerts",     icon: Bell             },
+    { id: "ai",         label: "AI Report",  icon: Cpu              },
+    { id: "export",     label: "Export",     icon: FileDown         },
+  ];
+
+  return (
+    <aside className={`
+      flex flex-col h-screen sticky top-0 transition-all duration-300 z-40
+      ${dark ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200"}
+      border-r ${collapsed ? "w-16" : "w-60"}
+    `}>
+      {/* Logo */}
+      <div className={`flex items-center gap-3 px-4 py-5 border-b ${dark ? "border-slate-800" : "border-slate-200"}`}>
+        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center flex-shrink-0">
+          <Shield className="w-4 h-4 text-white" />
+        </div>
+        {!collapsed && (
+          <div>
+            <p className={`text-sm font-bold tracking-tight ${dark ? "text-white" : "text-slate-900"}`}>GeoFence</p>
+            <p className="text-xs text-slate-500">Alert System</p>
+          </div>
+        )}
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          className={`ml-auto p-1 rounded-md ${dark ? "hover:bg-slate-800 text-slate-400" : "hover:bg-slate-100 text-slate-500"}`}
+        >
+          <Menu className="w-4 h-4" />
+        </button>
+      </div>
+
+      {/* Nav items */}
+      <nav className="flex-1 py-4 px-2 space-y-1">
+        {nav.map(({ id, label, icon: Icon }) => {
+          const isActive = active === id;
+          return (
+            <motion.button
+              whileHover={{ scale: 1.02, x: 4 }}
+              whileTap={{ scale: 0.98 }}
+              key={id}
+              onClick={() => setActive(id)}
+              className={`
+                w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all relative overflow-hidden
+                ${isActive
+                  ? "bg-gradient-to-r from-cyan-500/20 to-blue-600/20 text-cyan-400 border border-cyan-500/20"
+                  : dark
+                    ? "text-slate-400 hover:bg-slate-800 hover:text-slate-200"
+                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"}
+              `}
+            >
+              <Icon className={`w-4 h-4 flex-shrink-0 ${isActive ? "text-cyan-400" : ""}`} />
+              {!collapsed && <span>{label}</span>}
+              {!collapsed && isActive && <ChevronRight className="w-3 h-3 ml-auto relative z-10" />}
+            </motion.button>
+          );
+        })}
+      </nav>
+
+      {/* Footer controls */}
+      <div className={`p-3 border-t ${dark ? "border-slate-800" : "border-slate-200"} flex flex-col gap-2`}>
+        <button
+          onClick={toggleDark}
+          className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all
+            ${dark ? "text-slate-400 hover:bg-slate-800" : "text-slate-500 hover:bg-slate-100"}`}
+        >
+          {dark ? <Sun className="w-4 h-4 flex-shrink-0" /> : <Moon className="w-4 h-4 flex-shrink-0" />}
+          {!collapsed && <span>{dark ? "Light Mode" : "Dark Mode"}</span>}
+        </button>
+      </div>
+    </aside>
+  );
+}
+
+/** Stat card */
+function StatCard({ label, value, sub, icon: Icon, color, dark }) {
+  const colors = {
+    cyan:   "from-cyan-500/20 to-cyan-600/5 border-cyan-500/20 text-cyan-400",
+    emerald:"from-emerald-500/20 to-emerald-600/5 border-emerald-500/20 text-emerald-400",
+    red:    "from-red-500/20 to-red-600/5 border-red-500/20 text-red-400",
+    orange: "from-orange-500/20 to-orange-600/5 border-orange-500/20 text-orange-400",
+    blue:   "from-blue-500/20 to-blue-600/5 border-blue-500/20 text-blue-400",
+  };
+  return (
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ y: -5, scale: 1.02 }}
+      transition={{ type: "spring", stiffness: 300, damping: 20 }}
+      className={`
+      rounded-xl border bg-gradient-to-br p-5 ${colors[color]}
+      ${dark ? "bg-slate-900" : "bg-white"}
+    `}>
+      <div className="flex items-start justify-between">
+        <div>
+          <p className={`text-xs font-medium uppercase tracking-wider mb-1 ${dark ? "text-slate-500" : "text-slate-500"}`}>{label}</p>
+          <p className={`text-3xl font-bold ${dark ? "text-white" : "text-slate-900"}`}>{value}</p>
+          {sub && <p className={`text-xs mt-1 ${colors[color].split(" ").at(-1)}`}>{sub}</p>}
+        </div>
+        <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${colors[color]} flex items-center justify-center`}>
+          <Icon className={`w-5 h-5 ${colors[color].split(" ").at(-1)}`} />
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+/** Alert feed item */
+function AlertItem({ alert, onMarkRead, dark }) {
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, x: -20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, scale: 0.9 }}
+      whileHover={{ scale: 1.02 }}
+      className={`
+      flex items-start gap-3 p-3 rounded-lg border transition-all
+      ${!alert.is_read
+        ? dark ? "bg-slate-800/80 border-slate-700" : "bg-blue-50 border-blue-200"
+        : dark ? "bg-slate-900/50 border-slate-800" : "bg-slate-50 border-slate-200"}
+    `}>
+      <div className="mt-0.5">{alertIcon(alert.alert_type)}</div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className={`text-sm font-semibold ${dark ? "text-white" : "text-slate-900"}`}>{alert.device_name}</span>
+          <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${priorityColor(alert.priority)}`}>
+            {alert.priority}
+          </span>
+          {!alert.is_read && (
+            <span className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse" />
+          )}
+        </div>
+        <p className={`text-xs mt-0.5 ${dark ? "text-slate-400" : "text-slate-600"}`}>
+          {alert.alert_type === "ENTRY" ? "Entered" : "Exited"} <strong>{alert.geofence_name}</strong> · via {alert.notified_via}
+        </p>
+        <p className="text-xs text-slate-500 mt-0.5">{timeAgo(alert.triggered_at)}</p>
+      </div>
+      {!alert.is_read && (
+        <button
+          onClick={() => onMarkRead(alert.id)}
+          className="text-xs text-cyan-400 hover:text-cyan-300 whitespace-nowrap"
+        >
+          Mark read
+        </button>
+      )}
+    </motion.div>
+  );
+}
+
+/** Device row */
+function DeviceRow({ device, dark }) {
+  return (
+    <tr className={`border-b text-sm transition-colors
+      ${dark ? "border-slate-800 hover:bg-slate-800/50" : "border-slate-100 hover:bg-slate-50"}`}>
+      <td className="px-4 py-3">
+        <div className="flex items-center gap-2">
+          <span className={`w-2 h-2 rounded-full shadow-lg ${statusDot(device.status)}`} />
+          <span className={`font-medium ${dark ? "text-white" : "text-slate-900"}`}>{device.name}</span>
+        </div>
+      </td>
+      <td className={`px-4 py-3 font-mono text-xs ${dark ? "text-slate-400" : "text-slate-500"}`}>{device.device_id}</td>
+      <td className="px-4 py-3">
+        <span className={`capitalize text-xs px-2 py-0.5 rounded-full
+          ${device.type === "vehicle" ? "bg-blue-500/10 text-blue-400" : "bg-purple-500/10 text-purple-400"}`}>
+          {device.type}
+        </span>
+      </td>
+      <td className="px-4 py-3">
+        <span className={`capitalize text-xs font-medium px-2 py-0.5 rounded-full border
+          ${device.status === "inside"  ? "text-emerald-400 bg-emerald-500/10 border-emerald-500/20" :
+            device.status === "outside" ? "text-red-400 bg-red-500/10 border-red-500/20" :
+                                          "text-slate-400 bg-slate-500/10 border-slate-500/20"}`}>
+          {device.status}
+        </span>
+      </td>
+      <td className={`px-4 py-3 text-xs ${dark ? "text-slate-400" : "text-slate-500"}`}>{device.owner_name || "—"}</td>
+      <td className={`px-4 py-3 text-xs ${dark ? "text-slate-400" : "text-slate-500"}`}>{timeAgo(device.last_seen)}</td>
+    </tr>
+  );
+}
+
+// ─────────────────────────────────────────────
+// VIEWS
+// ─────────────────────────────────────────────
+
+/** Dashboard overview */
+function DashboardView({ devices, alerts, dark }) {
+  const insideCount   = devices.filter(d => d.status === "inside").length;
+  const outsideCount  = devices.filter(d => d.status === "outside").length;
+  const unreadCount   = alerts.filter(a => !a.is_read).length;
+  const criticalCount = alerts.filter(a => a.priority === "critical" && !a.is_read).length;
+
+  const pieData = [
+    { name: "Inside",  value: insideCount,                        color: "#34d399" },
+    { name: "Outside", value: outsideCount,                       color: "#f87171" },
+    { name: "Unknown", value: devices.length - insideCount - outsideCount, color: "#94a3b8" },
+  ];
+
+  const labelStyle = dark ? "text-slate-400" : "text-slate-500";
+
+  return (
+    <div className="space-y-6">
+      {/* Stat cards */}
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+        <StatCard label="Total Devices"    value={devices.length}  sub={`${insideCount} inside zone`}  icon={Truck}         color="cyan"    dark={dark} />
+        <StatCard label="Inside Geofence" value={insideCount}     sub="active & tracked"              icon={CheckCircle}   color="emerald" dark={dark} />
+        <StatCard label="Unread Alerts"   value={unreadCount}     sub={`${criticalCount} critical`}   icon={Bell}          color="orange"  dark={dark} />
+        <StatCard label="Outside Fence"   value={outsideCount}    sub="may need attention"            icon={AlertTriangle} color="red"     dark={dark} />
+      </div>
+
+      {/* Charts row */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+        {/* Activity line chart */}
+        <div className={`xl:col-span-2 rounded-xl border p-5 ${dark ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200"}`}>
+          <h3 className={`text-sm font-semibold mb-4 ${dark ? "text-white" : "text-slate-900"}`}>
+            Today's Activity <span className={`text-xs font-normal ${labelStyle}`}>— entries vs exits</span>
+          </h3>
+          <ResponsiveContainer width="100%" height={200}>
+            <BarChart data={MOCK_CHART_DATA} barGap={4}>
+              <CartesianGrid strokeDasharray="3 3" stroke={dark ? "#1e293b" : "#f1f5f9"} />
+              <XAxis dataKey="hour" tick={{ fontSize: 10, fill: dark ? "#64748b" : "#94a3b8" }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 10, fill: dark ? "#64748b" : "#94a3b8" }} axisLine={false} tickLine={false} />
+              <Tooltip
+                contentStyle={{ background: dark ? "#1e293b" : "#fff", border: "1px solid #334155", borderRadius: 8, fontSize: 12 }}
+                labelStyle={{ color: dark ? "#e2e8f0" : "#1e293b" }}
+              />
+              <Bar dataKey="entries" fill="#22d3ee" radius={[4,4,0,0]} />
+              <Bar dataKey="exits"   fill="#f87171" radius={[4,4,0,0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Pie chart */}
+        <div className={`rounded-xl border p-5 ${dark ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200"}`}>
+          <h3 className={`text-sm font-semibold mb-4 ${dark ? "text-white" : "text-slate-900"}`}>Fleet Status</h3>
+          <ResponsiveContainer width="100%" height={200}>
+            <PieChart>
+              <Pie data={pieData} cx="50%" cy="50%" innerRadius={55} outerRadius={80} paddingAngle={3} dataKey="value">
+                {pieData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
+              </Pie>
+              <Tooltip contentStyle={{ background: dark ? "#1e293b" : "#fff", border: "1px solid #334155", borderRadius: 8, fontSize: 12 }} />
+              <Legend iconType="circle" iconSize={8} formatter={v => <span style={{ color: dark ? "#94a3b8" : "#64748b", fontSize: 11 }}>{v}</span>} />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      {/* Recent alerts */}
+      <div className={`rounded-xl border p-5 ${dark ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200"}`}>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className={`text-sm font-semibold ${dark ? "text-white" : "text-slate-900"}`}>Recent Alerts</h3>
+          <span className={`text-xs ${labelStyle}`}>{unreadCount} unread</span>
+        </div>
+        <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+          <AnimatePresence initial={false}>
+            {alerts.slice(0, 6).map(a => (
+              <AlertItem key={a.id} alert={a} onMarkRead={() => {}} dark={dark} />
+            ))}
+          </AnimatePresence>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Devices management view */
+function DevicesView({ devices, setDevices, dark, addDeviceToFirestore, deleteDeviceFromFirestore }) {
+  const [search, setSearch]     = useState("");
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm]         = useState({ device_id: "", name: "", type: "vehicle", owner_name: "", phone: "", email: "" });
+  const [saving, setSaving]     = useState(false);
+
+  const filtered = devices.filter(d =>
+    d.name.toLowerCase().includes(search.toLowerCase()) ||
+    d.device_id.toLowerCase().includes(search.toLowerCase())
+  );
+
+  async function handleAdd(e) {
+    e.preventDefault();
+    setSaving(true);
+    const result = await addDeviceToFirestore(form);
+    if (result) {
+      setDevices(prev => [...prev, result]);
+    }
+    setForm({ device_id: "", name: "", type: "vehicle", owner_name: "", phone: "", email: "" });
+    setShowForm(false);
+    setSaving(false);
+  }
+
+  async function handleDelete(id) {
+    await deleteDeviceFromFirestore(id);
+    setDevices(prev => prev.filter(d => d.id !== id));
+  }
+
+  const inputCls = `w-full px-3 py-2 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50
+    ${dark ? "bg-slate-800 border-slate-700 text-white placeholder-slate-500" : "bg-white border-slate-300 text-slate-900 placeholder-slate-400"}`;
+
+  return (
+    <div className="space-y-5">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+        <h2 className={`text-lg font-bold ${dark ? "text-white" : "text-slate-900"}`}>Fleet Devices</h2>
+        <div className="flex gap-2">
+          <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm flex-1
+            ${dark ? "bg-slate-800 border-slate-700" : "bg-white border-slate-200"}`}>
+            <Search className="w-4 h-4 text-slate-400" />
+            <input
+              value={search} onChange={e => setSearch(e.target.value)}
+              placeholder="Search devices…"
+              className={`bg-transparent outline-none flex-1 ${dark ? "text-white placeholder-slate-500" : "text-slate-900 placeholder-slate-400"}`}
+            />
+          </div>
+          <button
+            onClick={() => setShowForm(!showForm)}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-white text-sm font-medium transition-colors"
+          >
+            <Plus className="w-4 h-4" /> Add Device
+          </button>
+        </div>
+      </div>
+
+      {/* Add form */}
+      {showForm && (
+        <form onSubmit={handleAdd} className={`rounded-xl border p-5 ${dark ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200"}`}>
+          <h3 className={`text-sm font-semibold mb-4 ${dark ? "text-white" : "text-slate-900"}`}>Register New Device</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <input required placeholder="Device ID (e.g. TRUCK-001)" value={form.device_id} onChange={e => setForm(f => ({...f, device_id: e.target.value}))} className={inputCls} />
+            <input required placeholder="Name (e.g. Alpha Hauler)"   value={form.name}      onChange={e => setForm(f => ({...f, name: e.target.value}))}      className={inputCls} />
+            <select value={form.type} onChange={e => setForm(f => ({...f, type: e.target.value}))} className={inputCls}>
+              <option value="vehicle">Vehicle</option>
+              <option value="personnel">Personnel</option>
+              <option value="asset">Asset</option>
+            </select>
+            <input placeholder="Owner name"   value={form.owner_name} onChange={e => setForm(f => ({...f, owner_name: e.target.value}))} className={inputCls} />
+            <input placeholder="Phone (+91…)" value={form.phone}      onChange={e => setForm(f => ({...f, phone: e.target.value}))}      className={inputCls} />
+            <input placeholder="Email"        value={form.email}      onChange={e => setForm(f => ({...f, email: e.target.value}))}      className={inputCls} type="email" />
+          </div>
+          <div className="flex gap-2 mt-4">
+            <button type="submit" disabled={saving}
+              className="px-4 py-2 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-white text-sm font-medium transition-colors disabled:opacity-50">
+              {saving ? "Saving…" : "Save Device"}
+            </button>
+            <button type="button" onClick={() => setShowForm(false)}
+              className={`px-4 py-2 rounded-lg text-sm transition-colors ${dark ? "bg-slate-800 hover:bg-slate-700 text-slate-300" : "bg-slate-100 hover:bg-slate-200 text-slate-700"}`}>
+              Cancel
+            </button>
+          </div>
+        </form>
+      )}
+
+      {/* Table */}
+      <div className={`rounded-xl border overflow-hidden ${dark ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200"}`}>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className={`text-xs uppercase tracking-wider ${dark ? "bg-slate-800 text-slate-400" : "bg-slate-50 text-slate-500"}`}>
+                {["Name", "Device ID", "Type", "Status", "Owner", "Last Seen", "Actions"].map(h => (
+                  <th key={h} className="px-4 py-3 text-left font-semibold">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              <AnimatePresence>
+              {filtered.map(d => (
+                <motion.tr
+                  layout
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  key={d.id} className={`border-b text-sm transition-colors ${dark ? "border-slate-800 hover:bg-slate-800/50" : "border-slate-100 hover:bg-slate-50"}`}>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <span className={`w-2 h-2 rounded-full shadow-lg ${statusDot(d.status)}`} />
+                      <span className={`font-medium ${dark ? "text-white" : "text-slate-900"}`}>{d.name}</span>
+                    </div>
+                  </td>
+                  <td className={`px-4 py-3 font-mono text-xs ${dark ? "text-slate-400" : "text-slate-500"}`}>{d.device_id}</td>
+                  <td className="px-4 py-3">
+                    <span className={`capitalize text-xs px-2 py-0.5 rounded-full
+                      ${d.type === "vehicle" ? "bg-blue-500/10 text-blue-400" : d.type === "personnel" ? "bg-purple-500/10 text-purple-400" : "bg-slate-500/10 text-slate-400"}`}>
+                      {d.type}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className={`capitalize text-xs font-medium px-2 py-0.5 rounded-full border
+                      ${d.status === "inside"  ? "text-emerald-400 bg-emerald-500/10 border-emerald-500/20" :
+                        d.status === "outside" ? "text-red-400 bg-red-500/10 border-red-500/20" :
+                                                  "text-slate-400 bg-slate-500/10 border-slate-500/20"}`}>
+                      {d.status}
+                    </span>
+                  </td>
+                  <td className={`px-4 py-3 text-xs ${dark ? "text-slate-400" : "text-slate-500"}`}>{d.owner_name || "—"}</td>
+                  <td className={`px-4 py-3 text-xs ${dark ? "text-slate-400" : "text-slate-500"}`}>{timeAgo(d.last_seen)}</td>
+                  <td className="px-4 py-3">
+                    <button onClick={() => handleDelete(d.id)} className="p-1.5 rounded-md text-red-400 hover:bg-red-500/10 transition-colors">
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </td>
+                </motion.tr>
+              ))}
+              </AnimatePresence>
+            </tbody>
+          </table>
+          {!filtered.length && (
+            <div className={`text-center py-12 text-sm ${dark ? "text-slate-500" : "text-slate-400"}`}>No devices found.</div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Geofences view */
+function GeofencesView({ geofences, setGeofences, dark, addGeofenceToFirestore, updateGeofenceInFirestore }) {
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState({ name: "", description: "", shape: "circle", center_lat: "", center_lng: "", radius_m: "" });
+  const [saving, setSaving] = useState(false);
+
+  async function handleAdd(e) {
+    e.preventDefault();
+    setSaving(true);
+    const payload = { ...form, center_lat: parseFloat(form.center_lat), center_lng: parseFloat(form.center_lng), radius_m: parseFloat(form.radius_m) };
+    const result = await addGeofenceToFirestore(payload);
+    if (result) {
+      setGeofences(prev => [...prev, result]);
+    }
+    setForm({ name: "", description: "", shape: "circle", center_lat: "", center_lng: "", radius_m: "" });
+    setShowForm(false);
+    setSaving(false);
+  }
+
+  async function handleToggle(id) {
+    const geofence = geofences.find(g => g.id === id);
+    if (geofence) {
+      await updateGeofenceInFirestore(id, { is_active: !geofence.is_active });
+      setGeofences(prev => prev.map(g => g.id === id ? { ...g, is_active: !g.is_active } : g));
+    }
+  }
+
+  const inputCls = `w-full px-3 py-2 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50
+    ${dark ? "bg-slate-800 border-slate-700 text-white placeholder-slate-500" : "bg-white border-slate-300 text-slate-900 placeholder-slate-400"}`;
+
+  return (
+    <div className="space-y-5">
+      <div className="flex items-center justify-between">
+        <h2 className={`text-lg font-bold ${dark ? "text-white" : "text-slate-900"}`}>Geofences</h2>
+        <button onClick={() => setShowForm(!showForm)}
+          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-white text-sm font-medium transition-colors">
+          <Plus className="w-4 h-4" /> New Geofence
+        </button>
+      </div>
+
+      {showForm && (
+        <form onSubmit={handleAdd} className={`rounded-xl border p-5 ${dark ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200"}`}>
+          <h3 className={`text-sm font-semibold mb-4 ${dark ? "text-white" : "text-slate-900"}`}>Create Geofence</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <input required placeholder="Name (e.g. Main Depot)" value={form.name} onChange={e => setForm(f=>({...f,name:e.target.value}))} className={inputCls} />
+            <input placeholder="Description" value={form.description} onChange={e => setForm(f=>({...f,description:e.target.value}))} className={inputCls} />
+            <select value={form.shape} onChange={e => setForm(f=>({...f,shape:e.target.value}))} className={inputCls}>
+              <option value="circle">Circle</option>
+            </select>
+            <input required placeholder="Center Latitude (e.g. 17.385)" value={form.center_lat} onChange={e => setForm(f=>({...f,center_lat:e.target.value}))} className={inputCls} />
+            <input required placeholder="Center Longitude (e.g. 78.486)" value={form.center_lng} onChange={e => setForm(f=>({...f,center_lng:e.target.value}))} className={inputCls} />
+            <input required placeholder="Radius in meters (e.g. 500)" value={form.radius_m} onChange={e => setForm(f=>({...f,radius_m:e.target.value}))} className={inputCls} />
+          </div>
+          <div className="flex gap-2 mt-4">
+            <button type="submit" disabled={saving}
+              className="px-4 py-2 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-white text-sm font-medium disabled:opacity-50">
+              {saving ? "Saving…" : "Save Geofence"}
+            </button>
+            <button type="button" onClick={() => setShowForm(false)}
+              className={`px-4 py-2 rounded-lg text-sm ${dark ? "bg-slate-800 text-slate-300" : "bg-slate-100 text-slate-700"}`}>
+              Cancel
+            </button>
+          </div>
+        </form>
+      )}
+
+      <motion.div layout className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+        <AnimatePresence>
+        {geofences.map(g => (
+          <motion.div 
+            layout
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            whileHover={{ y: -5, boxShadow: dark ? "0 10px 30px -10px rgba(6,182,212,0.2)" : "0 10px 30px -10px rgba(0,0,0,0.1)" }}
+            key={g.id} className={`rounded-xl border p-5 transition-all ${dark ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200"}
+            ${g.is_active ? "" : "opacity-60"}`}>
+            <div className="flex items-start justify-between mb-3">
+              <div>
+                <h3 className={`font-semibold text-sm ${dark ? "text-white" : "text-slate-900"}`}>{g.name}</h3>
+                <p className={`text-xs mt-0.5 ${dark ? "text-slate-500" : "text-slate-500"}`}>{g.description || g.shape}</p>
+              </div>
+              <button onClick={() => handleToggle(g.id)}
+                className={`p-1.5 rounded-md transition-colors ${g.is_active ? "text-emerald-400 bg-emerald-500/10" : "text-slate-400 bg-slate-500/10"}`}>
+                {g.is_active ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+              </button>
+            </div>
+            <div className={`space-y-1 text-xs ${dark ? "text-slate-400" : "text-slate-500"}`}>
+              <p><span className="font-medium">Shape:</span> {g.shape}</p>
+              {g.center_lat && <p><span className="font-medium">Center:</span> {parseFloat(g.center_lat).toFixed(4)}, {parseFloat(g.center_lng).toFixed(4)}</p>}
+              {g.radius_m   && <p><span className="font-medium">Radius:</span> {g.radius_m}m</p>}
+            </div>
+            <div className={`mt-3 pt-3 border-t ${dark ? "border-slate-800" : "border-slate-100"}`}>
+              <span className={`text-xs font-medium px-2 py-0.5 rounded-full
+                ${g.is_active ? "text-emerald-400 bg-emerald-500/10" : "text-slate-400 bg-slate-500/10"}`}>
+                {g.is_active ? "● Active" : "○ Inactive"}
+              </span>
+            </div>
+          </motion.div>
+        ))}
+        </AnimatePresence>
+      </motion.div>
+    </div>
+  );
+}
+
+/** Alerts view */
+function AlertsView({ alerts, setAlerts, dark, markAlertAsReadInFirestore }) {
+  const [filter, setFilter]   = useState("all");  // all | unread | critical
+  const [search, setSearch]   = useState("");
+
+  const filtered = alerts.filter(a => {
+    const matchFilter = filter === "all" ? true : filter === "unread" ? !a.is_read : a.priority === "critical";
+    const matchSearch = !search || a.device_name?.toLowerCase().includes(search.toLowerCase()) || a.geofence_name?.toLowerCase().includes(search.toLowerCase());
+    return matchFilter && matchSearch;
+  });
+
+  async function markRead(id) {
+    await markAlertAsReadInFirestore(id);
+    setAlerts(prev => prev.map(a => a.id === id ? { ...a, is_read: true } : a));
+  }
+
+  function markAllRead() {
+    alerts.filter(a => !a.is_read).forEach(a => markAlertAsReadInFirestore(a.id));
+    setAlerts(prev => prev.map(a => ({ ...a, is_read: true })));
+  }
+
+  const filterBtn = (val, label) => (
+    <button onClick={() => setFilter(val)}
+      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors
+        ${filter === val
+          ? "bg-cyan-500/20 text-cyan-400 border border-cyan-500/30"
+          : dark ? "text-slate-400 hover:text-slate-200" : "text-slate-500 hover:text-slate-900"}`}>
+      {label}
+    </button>
+  );
+
+  return (
+    <div className="space-y-5">
+      <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+        <h2 className={`text-lg font-bold ${dark ? "text-white" : "text-slate-900"}`}>
+          Alert Log <span className={`text-sm font-normal ml-2 ${dark ? "text-slate-500" : "text-slate-400"}`}>{filtered.length} alerts</span>
+        </h2>
+        <div className="flex gap-2 items-center flex-wrap">
+          {filterBtn("all",      "All")}
+          {filterBtn("unread",   "Unread")}
+          {filterBtn("critical", "Critical")}
+          <button onClick={markAllRead}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors
+              ${dark ? "bg-slate-800 text-slate-400 hover:text-slate-200" : "bg-slate-100 text-slate-500 hover:text-slate-900"}`}>
+            Mark all read
+          </button>
+        </div>
+      </div>
+
+      {/* Search */}
+      <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm
+        ${dark ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200"}`}>
+        <Search className="w-4 h-4 text-slate-400" />
+        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search device or geofence…"
+          className={`bg-transparent outline-none flex-1 ${dark ? "text-white placeholder-slate-500" : "text-slate-900 placeholder-slate-400"}`} />
+        {search && <button onClick={() => setSearch("")}><X className="w-4 h-4 text-slate-400" /></button>}
+      </div>
+
+      {/* Alert list */}
+      <div className="space-y-2">
+        <AnimatePresence initial={false}>
+          {filtered.map(a => (
+            <motion.div
+              layout
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
+              whileHover={{ scale: 1.01 }}
+              key={a.id} className={`flex items-start gap-3 p-4 rounded-xl border transition-all
+              ${!a.is_read
+              ? dark ? "bg-slate-800/80 border-slate-700" : "bg-blue-50 border-blue-200"
+              : dark ? "bg-slate-900/50 border-slate-800" : "bg-white border-slate-200"}`}>
+            <div className="mt-1">{alertIcon(a.alert_type)}</div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className={`font-semibold text-sm ${dark ? "text-white" : "text-slate-900"}`}>{a.device_name}</span>
+                <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${priorityColor(a.priority)}`}>{a.priority}</span>
+                <span className={`text-xs px-2 py-0.5 rounded-full font-medium
+                  ${a.alert_type === "ENTRY" ? "bg-emerald-500/10 text-emerald-400" : "bg-red-500/10 text-red-400"}`}>
+                  {a.alert_type}
+                </span>
+                {!a.is_read && <span className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse" />}
+              </div>
+              <p className={`text-xs mt-1 ${dark ? "text-slate-400" : "text-slate-600"}`}>
+                {a.alert_type === "ENTRY" ? "Entered" : "Exited"} <strong>{a.geofence_name}</strong>
+                {a.notified_via && a.notified_via !== "none" && <> · Notified via <span className="text-cyan-400">{a.notified_via}</span></>}
+              </p>
+              <div className="flex items-center gap-3 mt-1">
+                <span className="text-xs text-slate-500 flex items-center gap-1">
+                  <Clock className="w-3 h-3" />{timeAgo(a.triggered_at)}
+                </span>
+                {a.lat && (
+                  <a href={`https://maps.google.com/?q=${a.lat},${a.lng}`} target="_blank" rel="noreferrer"
+                    className="text-xs text-cyan-400 hover:underline flex items-center gap-1">
+                    <MapPin className="w-3 h-3" />View on map
+                  </a>
+                )}
+              </div>
+            </div>
+            {!a.is_read && (
+              <button onClick={() => markRead(a.id)}
+                className="text-xs text-cyan-400 hover:text-cyan-300 whitespace-nowrap mt-1">
+                Mark read
+              </button>
+            )}
+            </motion.div>
+          ))}
+        </AnimatePresence>
+        {!filtered.length && (
+          <div className={`text-center py-16 text-sm ${dark ? "text-slate-500" : "text-slate-400"}`}>No alerts match your filter.</div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/** AI Report view */
+function AIView({ alerts, dark }) {
+  const [report, setReport]   = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError]     = useState(null);
+
+  async function generateReport() {
+    setLoading(true);
+    setError(null);
+    const result = await apiFetch("/alerts/ai-report", { method: "POST" });
+    if (result && result.summary) {
+      setReport(result);
+    } else {
+      // Simulate with mock when backend unavailable
+      await new Promise(r => setTimeout(r, 1800));
+      setReport(MOCK_AI_REPORT);
+    }
+    setLoading(false);
+  }
+
+  return (
+    <div className="space-y-5">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className={`text-lg font-bold ${dark ? "text-white" : "text-slate-900"}`}>AI Operations Report</h2>
+          <p className={`text-xs mt-0.5 ${dark ? "text-slate-500" : "text-slate-400"}`}>Powered by Gemini 1.5 Flash · Today's alerts summary</p>
+        </div>
+        <button onClick={generateReport} disabled={loading}
+          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white text-sm font-medium transition-all disabled:opacity-60">
+          {loading ? <><RefreshCw className="w-4 h-4 animate-spin" />Analyzing…</> : <><Zap className="w-4 h-4" />Generate Report</>}
+        </button>
+      </div>
+
+      {!report && !loading && (
+        <div className={`rounded-xl border-2 border-dashed p-16 text-center ${dark ? "border-slate-800" : "border-slate-200"}`}>
+          <Cpu className={`w-12 h-12 mx-auto mb-3 ${dark ? "text-slate-700" : "text-slate-300"}`} />
+          <p className={`text-sm ${dark ? "text-slate-500" : "text-slate-400"}`}>Click "Generate Report" to analyze today's geofence activity using AI</p>
+        </div>
+      )}
+
+      {loading && (
+        <div className={`rounded-xl border p-10 text-center ${dark ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200"}`}>
+          <div className="relative w-16 h-16 mx-auto mb-4">
+            <div className="w-16 h-16 rounded-full border-4 border-slate-200 border-t-cyan-500 animate-spin absolute inset-0" />
+            <Cpu className="w-6 h-6 text-cyan-400 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+          </div>
+          <p className={`text-sm ${dark ? "text-slate-400" : "text-slate-500"}`}>AI is analyzing {alerts.length} alerts…</p>
+        </div>
+      )}
+
+      {report && !loading && (
+        <div className="space-y-4">
+          {/* Summary card */}
+          <div className={`rounded-xl border p-6 ${dark ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200"}`}>
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-6 h-6 rounded-md bg-cyan-500/20 flex items-center justify-center">
+                <TrendingUp className="w-3.5 h-3.5 text-cyan-400" />
+              </div>
+              <h3 className={`text-sm font-semibold ${dark ? "text-white" : "text-slate-900"}`}>Executive Summary</h3>
+            </div>
+            <p className={`text-sm leading-relaxed ${dark ? "text-slate-300" : "text-slate-700"}`}>{report.summary}</p>
+          </div>
+
+          {/* Suggestions */}
+          <div className={`rounded-xl border p-6 ${dark ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200"}`}>
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-6 h-6 rounded-md bg-blue-500/20 flex items-center justify-center">
+                <CheckCircle className="w-3.5 h-3.5 text-blue-400" />
+              </div>
+              <h3 className={`text-sm font-semibold ${dark ? "text-white" : "text-slate-900"}`}>Recommended Actions</h3>
+            </div>
+            <div className="space-y-3">
+              {(report.suggestions || []).map((s, i) => (
+                <div key={i} className={`flex gap-3 p-3 rounded-lg ${dark ? "bg-slate-800/50" : "bg-slate-50"}`}>
+                  <span className="w-5 h-5 rounded-full bg-blue-500/20 text-blue-400 text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">
+                    {i + 1}
+                  </span>
+                  <p className={`text-sm ${dark ? "text-slate-300" : "text-slate-700"}`}>{s}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Anomalies */}
+          {report.anomalies && (
+            <div className={`rounded-xl border border-orange-500/20 p-6 ${dark ? "bg-orange-500/5" : "bg-orange-50"}`}>
+              <div className="flex items-center gap-2 mb-3">
+                <AlertTriangle className="w-4 h-4 text-orange-400" />
+                <h3 className="text-sm font-semibold text-orange-400">Anomalies & Flags</h3>
+              </div>
+              <p className={`text-sm ${dark ? "text-slate-300" : "text-slate-700"}`}>{report.anomalies}</p>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** Export view */
+function ExportView({ alerts, devices, dark }) {
+  function downloadCSV() {
+    exportCSV(alerts.map(a => ({
+      ID:           a.id,
+      Device:       a.device_name,
+      DeviceID:     a.device_id,
+      Geofence:     a.geofence_name,
+      Type:         a.alert_type,
+      Priority:     a.priority,
+      Latitude:     a.lat,
+      Longitude:    a.lng,
+      NotifiedVia:  a.notified_via,
+      Timestamp:    a.triggered_at,
+      Read:         a.is_read,
+    })));
+  }
+
+  async function downloadFromServer() {
+    window.open(`${API}/export/alerts.csv`, "_blank");
+  }
+
+  const cardCls = `rounded-xl border p-6 ${dark ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200"}`;
+
+  return (
+    <div className="space-y-5">
+      <h2 className={`text-lg font-bold ${dark ? "text-white" : "text-slate-900"}`}>Export Reports</h2>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {/* CSV export */}
+        <div className={cardCls}>
+          <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center mb-4">
+            <FileDown className="w-5 h-5 text-emerald-400" />
+          </div>
+          <h3 className={`font-semibold text-sm mb-1 ${dark ? "text-white" : "text-slate-900"}`}>Alerts CSV Export</h3>
+          <p className={`text-xs mb-4 ${dark ? "text-slate-500" : "text-slate-500"}`}>Download all {alerts.length} alerts as a CSV file for spreadsheet analysis.</p>
+          <div className="flex gap-2">
+            <button onClick={downloadCSV}
+              className="px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-white text-xs font-medium transition-colors">
+              Download (Local)
+            </button>
+            <button onClick={downloadFromServer}
+              className={`px-4 py-2 rounded-lg text-xs font-medium transition-colors
+                ${dark ? "bg-slate-800 hover:bg-slate-700 text-slate-300" : "bg-slate-100 hover:bg-slate-200 text-slate-700"}`}>
+              Via Server API
+            </button>
+          </div>
+        </div>
+
+        {/* Device summary */}
+        <div className={cardCls}>
+          <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center mb-4">
+            <Truck className="w-5 h-5 text-blue-400" />
+          </div>
+          <h3 className={`font-semibold text-sm mb-1 ${dark ? "text-white" : "text-slate-900"}`}>Device Status CSV</h3>
+          <p className={`text-xs mb-4 ${dark ? "text-slate-500" : "text-slate-500"}`}>Export current status of all {devices.length} fleet devices with last seen time.</p>
+          <button onClick={() => exportCSV(devices.map(d => ({
+            ID: d.id, DeviceID: d.device_id, Name: d.name, Type: d.type,
+            Status: d.status, Owner: d.owner_name, LastSeen: d.last_seen, Lat: d.last_lat, Lng: d.last_lng,
+          })))}
+            className="px-4 py-2 rounded-lg bg-blue-500 hover:bg-blue-400 text-white text-xs font-medium transition-colors">
+            Download CSV
+          </button>
+        </div>
+      </div>
+
+      {/* Summary table */}
+      <div className={cardCls}>
+        <h3 className={`font-semibold text-sm mb-4 ${dark ? "text-white" : "text-slate-900"}`}>Quick Stats Preview</h3>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+          {[
+            { label: "Total Alerts",    value: alerts.length },
+            { label: "Entries",         value: alerts.filter(a => a.alert_type === "ENTRY").length },
+            { label: "Exits",           value: alerts.filter(a => a.alert_type === "EXIT").length },
+            { label: "Critical Events", value: alerts.filter(a => a.priority === "critical").length },
+          ].map(({ label, value }) => (
+            <div key={label} className={`p-3 rounded-lg ${dark ? "bg-slate-800" : "bg-slate-50"}`}>
+              <p className={`text-2xl font-bold ${dark ? "text-white" : "text-slate-900"}`}>{value}</p>
+              <p className={`text-xs mt-0.5 ${dark ? "text-slate-500" : "text-slate-500"}`}>{label}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Simulate device ping */}
+      <div className={`rounded-xl border border-cyan-500/20 p-6 ${dark ? "bg-cyan-500/5" : "bg-cyan-50"}`}>
+        <h3 className="text-sm font-semibold text-cyan-400 mb-2">🛰 Test: Simulate GPS Ping</h3>
+        <p className={`text-xs mb-4 ${dark ? "text-slate-400" : "text-slate-600"}`}>
+          Send a test GPS coordinate to the backend. This simulates a real device checking in.
+        </p>
+        <SimulatePing dark={dark} />
+      </div>
+    </div>
+  );
+}
+
+/** Simulate a device GPS ping to the backend */
+function SimulatePing({ dark }) {
+  const [form, setForm] = useState({ device_id: "TRUCK-001", lat: "17.385", lng: "78.486" });
+  const [res,  setRes]  = useState(null);
+  const [busy, setBusy] = useState(false);
+
+  async function send() {
+    setBusy(true);
+    setRes(null);
+    const payload = {
+      device_id: form.device_id,
+      lat: parseFloat(form.lat),
+      lng: parseFloat(form.lng),
+    };
+    const result = await apiFetch("/location", { method: "POST", body: JSON.stringify(payload) });
+    setRes(result || { error: "Connection error: check if backend server is running on :4000." });
+    setBusy(false);
+  }
+
+  const inputCls = `px-3 py-2 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50
+    ${dark ? "bg-slate-800 border-slate-700 text-white" : "bg-white border-slate-300 text-slate-900"}`;
+
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-wrap gap-2">
+        <input value={form.device_id} onChange={e => setForm(f=>({...f,device_id:e.target.value}))} placeholder="Device ID" className={inputCls} />
+        <input value={form.lat}       onChange={e => setForm(f=>({...f,lat:e.target.value}))}       placeholder="Latitude"  className={inputCls} />
+        <input value={form.lng}       onChange={e => setForm(f=>({...f,lng:e.target.value}))}       placeholder="Longitude" className={inputCls} />
+        <button onClick={send} disabled={busy}
+          className="px-4 py-2 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-white text-sm font-medium transition-colors disabled:opacity-50">
+          {busy ? "Sending…" : "Send Ping"}
+        </button>
+      </div>
+      {res && (
+        <pre className={`text-xs p-3 rounded-lg overflow-x-auto ${dark ? "bg-slate-800 text-slate-300" : "bg-slate-100 text-slate-700"}`}>
+          {JSON.stringify(res, null, 2)}
+        </pre>
+      )}
+    </div>
+  );
+}
+
+
+
+
+
+
+
+
+
+// ─────────────────────────────────────────────
+// MAIN APP
+// ─────────────────────────────────────────────
+export default function App() {
+  const [activeView,  setActiveView]  = useState("dashboard");
+  const [dark,        setDark]        = useState(true);
+  const [collapsed,   setCollapsed]   = useState(false);
+  const [devices,     setDevices]     = useState(MOCK_DEVICES);
+  const [geofences,   setGeofences]   = useState(MOCK_GEOFENCES);
+  const [alerts,      setAlerts]      = useState(MOCK_ALERTS);
+  const [online,      setOnline]      = useState(false);
+  const [lastRefresh, setLastRefresh] = useState(new Date());
+
+  useEffect(() => {
+    // If Firestore isn't available, keep using mock data and mark offline
+    if (!db) {
+      setOnline(false);
+      return;
+    }
+
+    let unsubDevices = () => {};
+    let unsubGeofences = () => {};
+    let unsubAlerts = () => {};
+
+    try {
+      unsubDevices = onSnapshot(
+        collection(db, 'devices'),
+        snap => {
+          setDevices(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+          setLastRefresh(new Date());
+        }
+      );
+
+      unsubGeofences = onSnapshot(
+        collection(db, 'geofences'),
+        snap => {
+          setGeofences(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+          setLastRefresh(new Date());
+        }
+      );
+
+      unsubAlerts = onSnapshot(
+        query(collection(db, 'alerts'), orderBy('triggered_at', 'desc'), limit(100)),
+        snap => {
+          setAlerts(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+          setLastRefresh(new Date());
+        }
+      );
+
+      setOnline(true);
+    } catch (err) {
+      console.error('Firestore listeners failed to start:', err);
+      setOnline(false);
+    }
+
+    return () => {
+      try { unsubDevices(); } catch {}
+      try { unsubGeofences(); } catch {}
+      try { unsubAlerts(); } catch {}
+    };
+  }, []);
+
+  // Firestore write functions
+  async function addDeviceToFirestore(deviceData) {
+    try {
+      const docRef = await addDoc(collection(db, 'devices'), {
+        ...deviceData,
+        status: 'unknown',
+        last_seen: new Date().toISOString(),
+        last_lat: null,
+        last_lng: null,
+        created_at: serverTimestamp(),
+      });
+      
+      // Sync with the backend server to register the device and trigger the email notification
+      await apiFetch("/devices", {
+        method: "POST",
+        body: JSON.stringify(deviceData),
+      });
+
+      return { id: docRef.id, ...deviceData };
+    } catch (error) {
+      console.error('Error adding device:', error);
+      return null;
+    }
+  }
+
+  async function deleteDeviceFromFirestore(id) {
+    try {
+      await deleteDoc(doc(db, 'devices', id));
+    } catch (error) {
+      console.error('Error deleting device:', error);
+    }
+  }
+
+  async function addGeofenceToFirestore(geofenceData) {
+    try {
+      const docRef = await addDoc(collection(db, 'geofences'), {
+        ...geofenceData,
+        is_active: true,
+        created_at: serverTimestamp(),
+      });
+      return { id: docRef.id, ...geofenceData, is_active: true };
+    } catch (error) {
+      console.error('Error adding geofence:', error);
+      return null;
+    }
+  }
+
+  async function updateGeofenceInFirestore(id, data) {
+    try {
+      await updateDoc(doc(db, 'geofences', id), data);
+    } catch (error) {
+      console.error('Error updating geofence:', error);
+    }
+  }
+
+  async function markAlertAsReadInFirestore(id) {
+    try {
+      await updateDoc(doc(db, 'alerts', id), { is_read: true });
+    } catch (error) {
+      console.error('Error marking alert as read:', error);
+    }
+  }
+
+  const unreadCount = alerts.filter(a => !a.is_read).length;
+
+  const views = {
+    dashboard: <DashboardView devices={devices} alerts={alerts} dark={dark} />,
+    devices:   <DevicesView   devices={devices} setDevices={setDevices} dark={dark} addDeviceToFirestore={addDeviceToFirestore} deleteDeviceFromFirestore={deleteDeviceFromFirestore} />,
+    geofences: <GeofencesView geofences={geofences} setGeofences={setGeofences} dark={dark} addGeofenceToFirestore={addGeofenceToFirestore} updateGeofenceInFirestore={updateGeofenceInFirestore} />,
+    alerts:    <AlertsView    alerts={alerts} setAlerts={setAlerts} dark={dark} markAlertAsReadInFirestore={markAlertAsReadInFirestore} />,
+    ai:        <AIView        alerts={alerts} dark={dark} />,
+    export:    <ExportView    alerts={alerts} devices={devices} dark={dark} />,
+  };
+
+  return (
+    <div className={`flex min-h-screen ${dark ? "bg-slate-950 text-white" : "bg-slate-50 text-slate-900"}`}>
+      <Sidebar
+        active={activeView} setActive={setActiveView}
+        dark={dark} toggleDark={() => setDark(d => !d)}
+        collapsed={collapsed} setCollapsed={setCollapsed}
+      />
+
+      {/* Main content */}
+      <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        {/* Top bar */}
+        <header className={`sticky top-0 z-30 flex items-center gap-4 px-6 py-4 border-b
+          ${dark ? "bg-slate-950/90 border-slate-800 backdrop-blur-sm" : "bg-white/90 border-slate-200 backdrop-blur-sm"}`}>
+
+          {/* Breadcrumb */}
+          <div>
+            <h1 className={`text-base font-semibold capitalize ${dark ? "text-white" : "text-slate-900"}`}>
+              {activeView === "ai" ? "AI Report" : activeView}
+            </h1>
+            <p className={`text-xs ${dark ? "text-slate-500" : "text-slate-400"}`}>
+              Refreshed {timeAgo(lastRefresh)}
+            </p>
+          </div>
+
+          <div className="ml-auto flex items-center gap-3">
+            {/* Connection status */}
+            <div className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full border
+              ${online
+                ? "text-emerald-400 border-emerald-500/20 bg-emerald-500/10"
+                : "text-slate-400 border-slate-500/20 bg-slate-500/10"}`}>
+              {online ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
+              {online ? "Live" : "Mock data"}
+            </div>
+
+            {/* Unread badge */}
+            {unreadCount > 0 && (
+              <button onClick={() => setActiveView("alerts")}
+                className="relative flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full bg-red-500/10 border border-red-500/20 text-red-400">
+                <Bell className="w-3 h-3" />
+                {unreadCount} unread
+                <span className="w-1.5 h-1.5 bg-red-400 rounded-full animate-pulse" />
+              </button>
+            )}
+
+            {/* Refresh — Real-time listeners active */}
+            <button disabled
+              className={`p-2 rounded-lg transition-colors opacity-50 ${dark ? "text-slate-400" : "text-slate-500"}`}>
+              <RefreshCw className="w-4 h-4" />
+            </button>
+          </div>
+        </header>
+
+        {/* Page content */}
+        <div className="flex-1 relative overflow-hidden">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeView}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+              className="absolute inset-0 p-6 overflow-y-auto"
+            >
+              {views[activeView]}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
+        {/* Footer */}
+        <footer className={`px-6 py-3 border-t text-xs flex items-center justify-between
+          ${dark ? "border-slate-800 text-slate-600" : "border-slate-200 text-slate-400"}`}>
+          <span>Geofence Alert System · Built with React + Vite + Tailwind</span>
+          <span>{devices.length} devices · {geofences.filter(g=>g.is_active).length} active zones · {alerts.length} alerts logged</span>
+        </footer>
+      </main>
+    </div>
+  );
+}
