@@ -62,8 +62,9 @@ router.post('/ai-report', async (req, res) => {
         triggered_at: data.triggered_at ? (data.triggered_at.toDate ? data.triggered_at.toDate().toISOString() : data.triggered_at) : null
       };
     });
-    
-    if (!alerts.length) return res.json({ message: 'No alerts today' });
+    if (!alerts.length) {
+      return res.status(400).json({ error: 'No geofence alerts recorded today. Please trigger entry or exit events first to view the AI Operations Report.' });
+    }
     
     // Sort descending by triggered_at
     alerts.sort((a, b) => new Date(b.triggered_at) - new Date(a.triggered_at));

@@ -48,10 +48,7 @@ async function notifyAlert(device, geofence, alert) {
     }
   }
 
-  // If the primary recipient was different, also send a copy to the specified test email
-  if (device.email && device.email !== 'ksrisri97@gmail.com') {
-    await sendEmail('ksrisri97@gmail.com', `[Copy] Geofence ${alert.alert_type} — ${device.name}`, `<pre>${msg}</pre>`);
-  }
+
 
   return sentChannel;
 }

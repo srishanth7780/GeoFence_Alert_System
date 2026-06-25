@@ -111,10 +111,7 @@ router.post('/', async (req, res) => {
     const recipient = email || 'ksrisri97@gmail.com';
     await sendEmail(recipient, subject, htmlContent);
 
-    // Send a copy to the specified test email if it wasn't the main recipient
-    if (email && email !== 'ksrisri97@gmail.com') {
-      await sendEmail('ksrisri97@gmail.com', `[Copy] ${subject}`, htmlContent);
-    }
+
 
     res.status(201).json(device);
   } catch (err) {

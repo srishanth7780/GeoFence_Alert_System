@@ -60,13 +60,24 @@ function getChartData(alerts) {
 // ─────────────────────────────────────────────
 // HELPERS
 // ─────────────────────────────────────────────
-const timeAgo = (iso) => {
-  if (!iso) return "Never";
-  const sec = Math.floor((Date.now() - new Date(iso)) / 1000);
+const timeAgo = (dateInput) => {
+  if (!dateInput) return "Never";
+  let date;
+  if (dateInput.toDate && typeof dateInput.toDate === 'function') {
+    date = dateInput.toDate();
+  } else if (dateInput.seconds) {
+    date = new Date(dateInput.seconds * 1000);
+  } else {
+    date = new Date(dateInput);
+  }
+  
+  if (isNaN(date.getTime())) return "Invalid Date";
+  
+  const sec = Math.floor((Date.now() - date) / 1000);
   if (sec < 60)   return `${sec}s ago`;
   if (sec < 3600) return `${Math.floor(sec / 60)}m ago`;
   if (sec < 86400)return `${Math.floor(sec / 3600)}h ago`;
-  return new Date(iso).toLocaleDateString();
+  return date.toLocaleDateString();
 };
 
 const priorityColor = (p) => ({

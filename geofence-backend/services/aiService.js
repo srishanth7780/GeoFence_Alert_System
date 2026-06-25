@@ -3,12 +3,15 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 async function generateDailyReport(alerts) {
   try {
     const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey || apiKey === 'YOUR_GEMINI_API_KEY' || apiKey.startsWith('AQ.')) {
+    if (!apiKey || apiKey === 'YOUR_GEMINI_API_KEY') {
       throw new Error('API key is invalid or not configured.');
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = genAI.getGenerativeModel({ 
+      model: 'gemini-2.5-flash',
+      generationConfig: { responseMimeType: 'application/json' }
+    });
 
     const summary = alerts.map(a =>
       `[${a.triggered_at}] Device "${a.device_name}" ${a.alert_type} geofence "${a.geofence_name}" (Priority: ${a.priority})`
@@ -18,7 +21,11 @@ async function generateDailyReport(alerts) {
 
     const result   = await model.generateContent(prompt);
     const text     = result.response.text();
-    const clean    = text.replace(/```json|```/g, '').trim();
+    const match    = text.match(/\{[\s\S]*\}/);
+    if (!match) {
+      throw new Error('No JSON object found in response');
+    }
+    const clean    = match[0].trim();
     return JSON.parse(clean);
   } catch (err) {
     console.warn('[AI Service] Gemini API failed, using fallback report generator:', err.message);
