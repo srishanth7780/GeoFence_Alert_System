@@ -533,12 +533,14 @@ function DevicesView({ devices, setDevices, dark, addDeviceToFirestore, deleteDe
               className={`bg-transparent outline-none flex-1 ${dark ? "text-white placeholder-slate-500" : "text-slate-900 placeholder-slate-400"}`}
             />
           </div>
-          <button
+          <motion.button
             onClick={() => setShowForm(!showForm)}
+            whileHover={{ scale: 1.03, y: -1, boxShadow: "0 10px 20px -5px rgba(6, 182, 212, 0.3)" }}
+            whileTap={{ scale: 0.97 }}
             className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white text-sm font-semibold transition-all shadow-md shadow-cyan-500/10 hover:shadow-cyan-500/25"
           >
             <Plus className="w-4 h-4" /> Add Device
-          </button>
+          </motion.button>
         </div>
       </div>
 
@@ -567,14 +569,18 @@ function DevicesView({ devices, setDevices, dark, addDeviceToFirestore, deleteDe
                 <input placeholder="Email"        value={form.email}      onChange={e => setForm(f => ({...f, email: e.target.value}))}      className={inputCls} type="email" />
               </div>
               <div className="flex gap-2 mt-4">
-                <button type="submit" disabled={saving}
+                <motion.button type="submit" disabled={saving}
+                  whileHover={{ scale: 1.03, y: -1, boxShadow: "0 10px 20px -5px rgba(6, 182, 212, 0.3)" }}
+                  whileTap={{ scale: 0.97 }}
                   className="px-4 py-2 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white text-sm font-semibold transition-all shadow-md shadow-cyan-500/10 hover:shadow-cyan-500/25 disabled:opacity-50">
                   {saving ? "Saving…" : "Save Device"}
-                </button>
-                <button type="button" onClick={() => setShowForm(false)}
-                  className={`px-4 py-2 rounded-lg text-sm transition-colors ${dark ? "bg-slate-800 hover:bg-slate-700 text-slate-300" : "bg-slate-100 hover:bg-slate-200 text-slate-700"}`}>
+                </motion.button>
+                <motion.button type="button" onClick={() => setShowForm(false)}
+                  whileHover={{ scale: 1.02, backgroundColor: dark ? "rgba(51, 65, 85, 0.8)" : "rgba(226, 232, 240, 0.8)" }}
+                  whileTap={{ scale: 0.98 }}
+                  className={`px-4 py-2 rounded-lg text-sm transition-colors ${dark ? "bg-slate-800 text-slate-300" : "bg-slate-100 text-slate-700"}`}>
                   Cancel
-                </button>
+                </motion.button>
               </div>
             </form>
           </motion.div>
@@ -684,10 +690,12 @@ function GeofencesView({ geofences, setGeofences, dark, addGeofenceToFirestore, 
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <h2 className={`text-lg font-bold ${dark ? "text-white" : "text-slate-900"}`}>Geofences</h2>
-        <button onClick={() => setShowForm(!showForm)}
+        <motion.button onClick={() => setShowForm(!showForm)}
+          whileHover={{ scale: 1.03, y: -1, boxShadow: "0 10px 20px -5px rgba(6, 182, 212, 0.3)" }}
+          whileTap={{ scale: 0.97 }}
           className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white text-sm font-semibold transition-all shadow-md shadow-cyan-500/10 hover:shadow-cyan-500/25">
           <Plus className="w-4 h-4" /> New Geofence
-        </button>
+        </motion.button>
       </div>
 
       <AnimatePresence>
@@ -712,14 +720,18 @@ function GeofencesView({ geofences, setGeofences, dark, addGeofenceToFirestore, 
                 <input required placeholder="Radius in meters (e.g. 500)" value={form.radius_m} onChange={e => setForm(f=>({...f,radius_m:e.target.value}))} className={inputCls} />
               </div>
               <div className="flex gap-2 mt-4">
-                <button type="submit" disabled={saving}
+                <motion.button type="submit" disabled={saving}
+                  whileHover={{ scale: 1.03, y: -1, boxShadow: "0 10px 20px -5px rgba(6, 182, 212, 0.3)" }}
+                  whileTap={{ scale: 0.97 }}
                   className="px-4 py-2 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white text-sm font-semibold transition-all shadow-md shadow-cyan-500/10 hover:shadow-cyan-500/25 disabled:opacity-50">
                   {saving ? "Saving…" : "Save Geofence"}
-                </button>
-                <button type="button" onClick={() => setShowForm(false)}
-                  className={`px-4 py-2 rounded-lg text-sm ${dark ? "bg-slate-800 text-slate-300" : "bg-slate-100 text-slate-700"}`}>
+                </motion.button>
+                <motion.button type="button" onClick={() => setShowForm(false)}
+                  whileHover={{ scale: 1.02, backgroundColor: dark ? "rgba(51, 65, 85, 0.8)" : "rgba(226, 232, 240, 0.8)" }}
+                  whileTap={{ scale: 0.98 }}
+                  className={`px-4 py-2 rounded-lg text-sm transition-colors ${dark ? "bg-slate-800 text-slate-300" : "bg-slate-100 text-slate-700"}`}>
                   Cancel
-                </button>
+                </motion.button>
               </div>
             </form>
           </motion.div>
@@ -734,7 +746,12 @@ function GeofencesView({ geofences, setGeofences, dark, addGeofenceToFirestore, 
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
-            whileHover={{ y: -5, boxShadow: dark ? "0 10px 30px -10px rgba(6,182,212,0.2)" : "0 10px 30px -10px rgba(0,0,0,0.1)" }}
+            whileHover={{ 
+              y: -6, 
+              scale: 1.015,
+              borderColor: dark ? "rgba(6, 182, 212, 0.4)" : "rgba(6, 182, 212, 0.3)",
+              boxShadow: dark ? "0 15px 35px -10px rgba(6,182,212,0.25)" : "0 15px 35px -10px rgba(0,0,0,0.12)" 
+            }}
             key={g.id} className={`rounded-xl border p-5 transition-all ${dark ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200"}
             ${g.is_active ? "" : "opacity-60"}`}>
             <div className="flex items-start justify-between mb-3">
@@ -743,14 +760,18 @@ function GeofencesView({ geofences, setGeofences, dark, addGeofenceToFirestore, 
                 <p className={`text-xs mt-0.5 ${dark ? "text-slate-500" : "text-slate-500"}`}>{g.description || g.shape}</p>
               </div>
               <div className="flex gap-1">
-                <button onClick={() => handleToggle(g.id)}
+                <motion.button onClick={() => handleToggle(g.id)}
+                  whileHover={{ scale: 1.15, rotate: -6 }}
+                  whileTap={{ scale: 0.9 }}
                   className={`p-1.5 rounded-md transition-colors ${g.is_active ? "text-emerald-400 bg-emerald-500/10" : "text-slate-400 bg-slate-500/10"}`}>
                   {g.is_active ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-                </button>
-                <button onClick={() => handleDeleteGeofence(g.id)}
+                </motion.button>
+                <motion.button onClick={() => handleDeleteGeofence(g.id)}
+                  whileHover={{ scale: 1.15, rotate: 6, backgroundColor: "rgba(239, 68, 68, 0.15)" }}
+                  whileTap={{ scale: 0.9 }}
                   className="p-1.5 rounded-md text-red-400 hover:bg-red-500/10 transition-colors">
                   <Trash2 className="w-4 h-4" />
-                </button>
+                </motion.button>
               </div>
             </div>
             <div className={`space-y-1 text-xs ${dark ? "text-slate-400" : "text-slate-500"}`}>
