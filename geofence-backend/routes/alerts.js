@@ -88,4 +88,15 @@ router.post('/ai-report', async (req, res) => {
   }
 });
 
+// DELETE /api/alerts/:id
+router.delete('/:id', async (req, res) => {
+  try {
+    await db.collection('alerts').doc(req.params.id).delete();
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;

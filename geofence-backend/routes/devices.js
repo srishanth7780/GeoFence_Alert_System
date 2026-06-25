@@ -124,8 +124,27 @@ router.post('/', async (req, res) => {
 });
 
 router.delete('/:id', async (req, res) => {
+  const { id } = req.params;
   try {
-    await db.collection('devices').doc(req.params.id).delete();
+    const batch = db.batch();
+
+    // 1. Device ref
+    const deviceRef = db.collection('devices').doc(id);
+    batch.delete(deviceRef);
+
+    // 2. Fetch and delete associated alerts
+    const alertsSnap = await db.collection('alerts').where('device_id', '==', id).get();
+    alertsSnap.docs.forEach(doc => {
+      batch.delete(doc.ref);
+    });
+
+    // 3. Fetch and delete associated location logs
+    const logsSnap = await db.collection('location_logs').where('device_id', '==', id).get();
+    logsSnap.docs.forEach(doc => {
+      batch.delete(doc.ref);
+    });
+
+    await batch.commit();
     res.json({ success: true });
   } catch (err) {
     console.error(err);

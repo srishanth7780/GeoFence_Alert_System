@@ -33,54 +33,29 @@ import {
 const API = "http://localhost:4000/api";
 
 // ─────────────────────────────────────────────
-// MOCK DATA  (used when backend is offline)
+// DYNAMIC CHART DATA GENERATOR
 // ─────────────────────────────────────────────
-const MOCK_DEVICES = [
-  { id: 1, device_id: "TRUCK-001", name: "Alpha Hauler", type: "vehicle", status: "inside",  last_seen: new Date(Date.now() - 120000).toISOString(), owner_name: "Ravi Kumar",  last_lat: 17.385, last_lng: 78.486 },
-  { id: 2, device_id: "TRUCK-002", name: "Beta Carrier", type: "vehicle", status: "outside", last_seen: new Date(Date.now() - 340000).toISOString(), owner_name: "Suresh Babu", last_lat: 17.361, last_lng: 78.474 },
-  { id: 3, device_id: "VAN-001",   name: "Delta Van",   type: "vehicle", status: "inside",  last_seen: new Date(Date.now() -  45000).toISOString(), owner_name: "Priya Rao",  last_lat: 17.390, last_lng: 78.490 },
-  { id: 4, device_id: "PERS-001",  name: "Site Guard A",type: "personnel",status:"inside",  last_seen: new Date(Date.now() -  80000).toISOString(), owner_name: "Anand Singh",last_lat: 17.388, last_lng: 78.492 },
-  { id: 5, device_id: "TRUCK-003", name: "Gamma Rig",   type: "vehicle", status: "unknown", last_seen: new Date(Date.now()-3600000).toISOString(), owner_name: "Kiran Reddy", last_lat: null,   last_lng: null  },
-];
-
-const MOCK_GEOFENCES = [
-  { id: 1, name: "Main Depot",     shape: "circle",  center_lat: 17.385, center_lng: 78.486, radius_m: 500,  is_active: true  },
-  { id: 2, name: "Client Site A",  shape: "circle",  center_lat: 17.361, center_lng: 78.474, radius_m: 300,  is_active: true  },
-  { id: 3, name: "Restricted Zone",shape: "circle",  center_lat: 17.400, center_lng: 78.500, radius_m: 200,  is_active: false },
-];
-
-const MOCK_ALERTS = [
-  { id: 1, device_name: "Alpha Hauler",  device_id: "TRUCK-001", geofence_name: "Main Depot",    alert_type: "ENTRY",  priority: "medium",   triggered_at: new Date(Date.now() - 120000).toISOString(),  is_read: false, notified_via: "email",     lat: 17.385, lng: 78.486 },
-  { id: 2, device_name: "Beta Carrier",  device_id: "TRUCK-002", geofence_name: "Client Site A", alert_type: "EXIT",   priority: "high",     triggered_at: new Date(Date.now() - 340000).toISOString(),  is_read: false, notified_via: "email",     lat: 17.361, lng: 78.474 },
-  { id: 3, device_name: "Delta Van",     device_id: "VAN-001",   geofence_name: "Main Depot",    alert_type: "ENTRY",  priority: "medium",   triggered_at: new Date(Date.now() - 900000).toISOString(),  is_read: true,  notified_via: "email",     lat: 17.390, lng: 78.490 },
-  { id: 4, device_name: "Site Guard A",  device_id: "PERS-001",  geofence_name: "Main Depot",    alert_type: "EXIT",   priority: "critical", triggered_at: new Date(Date.now()-1800000).toISOString(),   is_read: false, notified_via: "email",     lat: 17.388, lng: 78.492 },
-  { id: 5, device_name: "Gamma Rig",     device_id: "TRUCK-003", geofence_name: "Client Site A", alert_type: "EXIT",   priority: "high",     triggered_at: new Date(Date.now()-3600000).toISOString(),   is_read: true,  notified_via: "none",      lat: 17.400, lng: 78.500 },
-  { id: 6, device_name: "Alpha Hauler",  device_id: "TRUCK-001", geofence_name: "Restricted Zone",alert_type:"ENTRY", priority: "critical", triggered_at: new Date(Date.now()-7200000).toISOString(),   is_read: true,  notified_via: "email",     lat: 17.400, lng: 78.500 },
-];
-
-const MOCK_CHART_DATA = [
-  { hour: "00:00", entries: 1, exits: 0 },
-  { hour: "02:00", entries: 0, exits: 1 },
-  { hour: "06:00", entries: 3, exits: 1 },
-  { hour: "08:00", entries: 5, exits: 2 },
-  { hour: "10:00", entries: 4, exits: 3 },
-  { hour: "12:00", entries: 6, exits: 4 },
-  { hour: "14:00", entries: 3, exits: 5 },
-  { hour: "16:00", entries: 7, exits: 2 },
-  { hour: "18:00", entries: 2, exits: 6 },
-  { hour: "20:00", entries: 1, exits: 3 },
-  { hour: "22:00", entries: 0, exits: 1 },
-];
-
-const MOCK_AI_REPORT = {
-  summary: "Today saw 6 geofence events across 4 devices. Alpha Hauler triggered a critical entry into the Restricted Zone at 14:00. Beta Carrier exited Client Site A unexpectedly at 16:20. Overall fleet compliance stands at 72%.",
-  suggestions: [
-    "Immediately investigate Alpha Hauler's entry into Restricted Zone — contact driver Ravi Kumar.",
-    "Review Beta Carrier's route deviation from Client Site A and update schedule in dispatch.",
-    "Schedule maintenance check for Gamma Rig which has been offline for 1+ hours.",
-  ],
-  anomalies: "Gamma Rig (TRUCK-003) has been unreachable for over 1 hour — possible GPS device failure or unauthorized removal.",
-};
+function getChartData(alerts) {
+  const hours = ["00:00", "02:00", "04:00", "06:00", "08:00", "10:00", "12:00", "14:00", "16:00", "18:00", "20:00", "22:00"];
+  const bins = hours.map(h => ({ hour: h, entries: 0, exits: 0 }));
+  
+  alerts.forEach(a => {
+    if (!a.triggered_at) return;
+    const date = a.triggered_at.toDate ? a.triggered_at.toDate() : new Date(a.triggered_at);
+    const today = new Date();
+    // Compare dates (day, month, year)
+    if (date.getDate() === today.getDate() && date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear()) {
+      const hr = date.getHours();
+      const binIdx = Math.min(Math.floor(hr / 2), bins.length - 1);
+      if (a.alert_type === 'ENTRY') {
+        bins[binIdx].entries++;
+      } else if (a.alert_type === 'EXIT') {
+        bins[binIdx].exits++;
+      }
+    }
+  });
+  return bins;
+}
 
 // ─────────────────────────────────────────────
 // HELPERS
@@ -111,6 +86,29 @@ const alertIcon = (type) =>
   type === "ENTRY"
     ? <CheckCircle className="w-4 h-4 text-emerald-400" />
     : <XCircle className="w-4 h-4 text-red-400" />;
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.08
+    }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 15 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      type: "spring",
+      stiffness: 260,
+      damping: 22
+    }
+  }
+};
 
 function exportCSV(rows) {
   if (!rows.length) return;
@@ -162,22 +160,34 @@ function Sidebar({ active, setActive, dark, toggleDark, collapsed, setCollapsed 
   ];
 
   return (
-    <aside className={`
-      flex flex-col h-screen sticky top-0 transition-all duration-300 z-40
-      ${dark ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200"}
-      border-r ${collapsed ? "w-16" : "w-60"}
-    `}>
+    <motion.aside
+      animate={{ width: collapsed ? 64 : 240 }}
+      transition={{ type: "spring", stiffness: 220, damping: 26 }}
+      className={`
+        flex flex-col h-screen sticky top-0 z-40
+        ${dark ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200"}
+        border-r overflow-hidden
+      `}
+    >
       {/* Logo */}
       <div className={`flex items-center gap-3 px-4 py-5 border-b ${dark ? "border-slate-800" : "border-slate-200"}`}>
         <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center flex-shrink-0">
           <Shield className="w-4 h-4 text-white" />
         </div>
-        {!collapsed && (
-          <div>
-            <p className={`text-sm font-bold tracking-tight ${dark ? "text-white" : "text-slate-900"}`}>GeoFence</p>
-            <p className="text-xs text-slate-500">Alert System</p>
-          </div>
-        )}
+        <AnimatePresence initial={false}>
+          {!collapsed && (
+            <motion.div
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -10 }}
+              transition={{ duration: 0.15 }}
+              className="flex-1 min-w-0"
+            >
+              <p className={`text-sm font-bold tracking-tight truncate ${dark ? "text-white" : "text-slate-900"}`}>GeoFence</p>
+              <p className="text-xs text-slate-500 truncate">Alert System</p>
+            </motion.div>
+          )}
+        </AnimatePresence>
         <button
           onClick={() => setCollapsed(!collapsed)}
           className={`ml-auto p-1 rounded-md ${dark ? "hover:bg-slate-800 text-slate-400" : "hover:bg-slate-100 text-slate-500"}`}
@@ -206,8 +216,31 @@ function Sidebar({ active, setActive, dark, toggleDark, collapsed, setCollapsed 
               `}
             >
               <Icon className={`w-4 h-4 flex-shrink-0 ${isActive ? "text-cyan-400" : ""}`} />
-              {!collapsed && <span>{label}</span>}
-              {!collapsed && isActive && <ChevronRight className="w-3 h-3 ml-auto relative z-10" />}
+              <AnimatePresence initial={false}>
+                {!collapsed && (
+                  <motion.span
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -10 }}
+                    transition={{ duration: 0.15 }}
+                    className="truncate"
+                  >
+                    {label}
+                  </motion.span>
+                )}
+              </AnimatePresence>
+              <AnimatePresence>
+                {!collapsed && isActive && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    className="ml-auto"
+                  >
+                    <ChevronRight className="w-3 h-3 text-cyan-400" />
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </motion.button>
           );
         })}
@@ -221,15 +254,28 @@ function Sidebar({ active, setActive, dark, toggleDark, collapsed, setCollapsed 
             ${dark ? "text-slate-400 hover:bg-slate-800" : "text-slate-500 hover:bg-slate-100"}`}
         >
           {dark ? <Sun className="w-4 h-4 flex-shrink-0" /> : <Moon className="w-4 h-4 flex-shrink-0" />}
-          {!collapsed && <span>{dark ? "Light Mode" : "Dark Mode"}</span>}
+          <AnimatePresence initial={false}>
+            {!collapsed && (
+              <motion.span
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -10 }}
+                transition={{ duration: 0.15 }}
+                className="truncate"
+              >
+                {dark ? "Light Mode" : "Dark Mode"}
+              </motion.span>
+            )}
+          </AnimatePresence>
         </button>
       </div>
-    </aside>
+    </motion.aside>
   );
 }
 
 /** Stat card */
 function StatCard({ label, value, sub, icon: Icon, color, dark }) {
+  const [hovered, setHovered] = useState(false);
   const colors = {
     cyan:   "from-cyan-500/20 to-cyan-600/5 border-cyan-500/20 text-cyan-400",
     emerald:"from-emerald-500/20 to-emerald-600/5 border-emerald-500/20 text-emerald-400",
@@ -239,9 +285,10 @@ function StatCard({ label, value, sub, icon: Icon, color, dark }) {
   };
   return (
     <motion.div 
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      whileHover={{ y: -5, scale: 1.02 }}
+      variants={itemVariants}
+      onHoverStart={() => setHovered(true)}
+      onHoverEnd={() => setHovered(false)}
+      whileHover={{ y: -5, scale: 1.02, boxShadow: dark ? "0 10px 30px -10px rgba(6,182,212,0.15)" : "0 10px 30px -10px rgba(0,0,0,0.06)" }}
       transition={{ type: "spring", stiffness: 300, damping: 20 }}
       className={`
       rounded-xl border bg-gradient-to-br p-5 ${colors[color]}
@@ -253,16 +300,20 @@ function StatCard({ label, value, sub, icon: Icon, color, dark }) {
           <p className={`text-3xl font-bold ${dark ? "text-white" : "text-slate-900"}`}>{value}</p>
           {sub && <p className={`text-xs mt-1 ${colors[color].split(" ").at(-1)}`}>{sub}</p>}
         </div>
-        <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${colors[color]} flex items-center justify-center`}>
+        <motion.div 
+          animate={{ scale: hovered ? 1.15 : 1, rotate: hovered ? 12 : 0 }}
+          transition={{ type: "spring", stiffness: 300, damping: 15 }}
+          className={`w-10 h-10 rounded-lg bg-gradient-to-br ${colors[color]} flex items-center justify-center`}
+        >
           <Icon className={`w-5 h-5 ${colors[color].split(" ").at(-1)}`} />
-        </div>
+        </motion.div>
       </div>
     </motion.div>
   );
 }
 
 /** Alert feed item */
-function AlertItem({ alert, onMarkRead, dark }) {
+function AlertItem({ alert, onMarkRead, onDelete, dark }) {
   return (
     <motion.div
       layout
@@ -292,14 +343,24 @@ function AlertItem({ alert, onMarkRead, dark }) {
         </p>
         <p className="text-xs text-slate-500 mt-0.5">{timeAgo(alert.triggered_at)}</p>
       </div>
-      {!alert.is_read && (
-        <button
-          onClick={() => onMarkRead(alert.id)}
-          className="text-xs text-cyan-400 hover:text-cyan-300 whitespace-nowrap"
-        >
-          Mark read
-        </button>
-      )}
+      <div className="flex flex-col gap-1 items-end justify-between self-stretch">
+        {!alert.is_read && (
+          <button
+            onClick={() => onMarkRead(alert.id)}
+            className="text-xs text-cyan-400 hover:text-cyan-300 whitespace-nowrap"
+          >
+            Mark read
+          </button>
+        )}
+        {onDelete && (
+          <button
+            onClick={() => onDelete(alert.id)}
+            className="p-1 rounded text-red-400 hover:bg-red-500/10 transition-colors mt-auto"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        )}
+      </div>
     </motion.div>
   );
 }
@@ -341,7 +402,7 @@ function DeviceRow({ device, dark }) {
 // ─────────────────────────────────────────────
 
 /** Dashboard overview */
-function DashboardView({ devices, alerts, dark }) {
+function DashboardView({ devices, alerts, dark, markAlertAsReadInFirestore, deleteAlertFromFirestore }) {
   const insideCount   = devices.filter(d => d.status === "inside").length;
   const outsideCount  = devices.filter(d => d.status === "outside").length;
   const unreadCount   = alerts.filter(a => !a.is_read).length;
@@ -356,7 +417,12 @@ function DashboardView({ devices, alerts, dark }) {
   const labelStyle = dark ? "text-slate-400" : "text-slate-500";
 
   return (
-    <div className="space-y-6">
+    <motion.div
+      variants={containerVariants}
+      initial="hidden"
+      animate="show"
+      className="space-y-6"
+    >
       {/* Stat cards */}
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
         <StatCard label="Total Devices"    value={devices.length}  sub={`${insideCount} inside zone`}  icon={Truck}         color="cyan"    dark={dark} />
@@ -366,14 +432,14 @@ function DashboardView({ devices, alerts, dark }) {
       </div>
 
       {/* Charts row */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+      <motion.div variants={itemVariants} className="grid grid-cols-1 xl:grid-cols-3 gap-4">
         {/* Activity line chart */}
         <div className={`xl:col-span-2 rounded-xl border p-5 ${dark ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200"}`}>
           <h3 className={`text-sm font-semibold mb-4 ${dark ? "text-white" : "text-slate-900"}`}>
             Today's Activity <span className={`text-xs font-normal ${labelStyle}`}>— entries vs exits</span>
           </h3>
           <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={MOCK_CHART_DATA} barGap={4}>
+            <BarChart data={getChartData(alerts)} barGap={4}>
               <CartesianGrid strokeDasharray="3 3" stroke={dark ? "#1e293b" : "#f1f5f9"} />
               <XAxis dataKey="hour" tick={{ fontSize: 10, fill: dark ? "#64748b" : "#94a3b8" }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 10, fill: dark ? "#64748b" : "#94a3b8" }} axisLine={false} tickLine={false} />
@@ -400,10 +466,10 @@ function DashboardView({ devices, alerts, dark }) {
             </PieChart>
           </ResponsiveContainer>
         </div>
-      </div>
+      </motion.div>
 
       {/* Recent alerts */}
-      <div className={`rounded-xl border p-5 ${dark ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200"}`}>
+      <motion.div variants={itemVariants} className={`rounded-xl border p-5 ${dark ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200"}`}>
         <div className="flex items-center justify-between mb-4">
           <h3 className={`text-sm font-semibold ${dark ? "text-white" : "text-slate-900"}`}>Recent Alerts</h3>
           <span className={`text-xs ${labelStyle}`}>{unreadCount} unread</span>
@@ -411,12 +477,12 @@ function DashboardView({ devices, alerts, dark }) {
         <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
           <AnimatePresence initial={false}>
             {alerts.slice(0, 6).map(a => (
-              <AlertItem key={a.id} alert={a} onMarkRead={() => {}} dark={dark} />
+              <AlertItem key={a.id} alert={a} onMarkRead={markAlertAsReadInFirestore} onDelete={deleteAlertFromFirestore} dark={dark} />
             ))}
           </AnimatePresence>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }
 
@@ -469,7 +535,7 @@ function DevicesView({ devices, setDevices, dark, addDeviceToFirestore, deleteDe
           </div>
           <button
             onClick={() => setShowForm(!showForm)}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-white text-sm font-medium transition-colors"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white text-sm font-semibold transition-all shadow-md shadow-cyan-500/10 hover:shadow-cyan-500/25"
           >
             <Plus className="w-4 h-4" /> Add Device
           </button>
@@ -477,33 +543,43 @@ function DevicesView({ devices, setDevices, dark, addDeviceToFirestore, deleteDe
       </div>
 
       {/* Add form */}
-      {showForm && (
-        <form onSubmit={handleAdd} className={`rounded-xl border p-5 ${dark ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200"}`}>
-          <h3 className={`text-sm font-semibold mb-4 ${dark ? "text-white" : "text-slate-900"}`}>Register New Device</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            <input required placeholder="Device ID (e.g. TRUCK-001)" value={form.device_id} onChange={e => setForm(f => ({...f, device_id: e.target.value}))} className={inputCls} />
-            <input required placeholder="Name (e.g. Alpha Hauler)"   value={form.name}      onChange={e => setForm(f => ({...f, name: e.target.value}))}      className={inputCls} />
-            <select value={form.type} onChange={e => setForm(f => ({...f, type: e.target.value}))} className={inputCls}>
-              <option value="vehicle">Vehicle</option>
-              <option value="personnel">Personnel</option>
-              <option value="asset">Asset</option>
-            </select>
-            <input placeholder="Owner name"   value={form.owner_name} onChange={e => setForm(f => ({...f, owner_name: e.target.value}))} className={inputCls} />
-            <input placeholder="Phone (+91…)" value={form.phone}      onChange={e => setForm(f => ({...f, phone: e.target.value}))}      className={inputCls} />
-            <input placeholder="Email"        value={form.email}      onChange={e => setForm(f => ({...f, email: e.target.value}))}      className={inputCls} type="email" />
-          </div>
-          <div className="flex gap-2 mt-4">
-            <button type="submit" disabled={saving}
-              className="px-4 py-2 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-white text-sm font-medium transition-colors disabled:opacity-50">
-              {saving ? "Saving…" : "Save Device"}
-            </button>
-            <button type="button" onClick={() => setShowForm(false)}
-              className={`px-4 py-2 rounded-lg text-sm transition-colors ${dark ? "bg-slate-800 hover:bg-slate-700 text-slate-300" : "bg-slate-100 hover:bg-slate-200 text-slate-700"}`}>
-              Cancel
-            </button>
-          </div>
-        </form>
-      )}
+      <AnimatePresence>
+        {showForm && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ type: "spring", stiffness: 220, damping: 26 }}
+            className="overflow-hidden"
+          >
+            <form onSubmit={handleAdd} className={`rounded-xl border p-5 mb-5 ${dark ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200"}`}>
+              <h3 className={`text-sm font-semibold mb-4 ${dark ? "text-white" : "text-slate-900"}`}>Register New Device</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                <input required placeholder="Device ID (e.g. TRUCK-001)" value={form.device_id} onChange={e => setForm(f => ({...f, device_id: e.target.value}))} className={inputCls} />
+                <input required placeholder="Name (e.g. Alpha Hauler)"   value={form.name}      onChange={e => setForm(f => ({...f, name: e.target.value}))}      className={inputCls} />
+                <select value={form.type} onChange={e => setForm(f => ({...f, type: e.target.value}))} className={inputCls}>
+                  <option value="vehicle">Vehicle</option>
+                  <option value="personnel">Personnel</option>
+                  <option value="asset">Asset</option>
+                </select>
+                <input placeholder="Owner name"   value={form.owner_name} onChange={e => setForm(f => ({...f, owner_name: e.target.value}))} className={inputCls} />
+                <input placeholder="Phone (+91…)" value={form.phone}      onChange={e => setForm(f => ({...f, phone: e.target.value}))}      className={inputCls} />
+                <input placeholder="Email"        value={form.email}      onChange={e => setForm(f => ({...f, email: e.target.value}))}      className={inputCls} type="email" />
+              </div>
+              <div className="flex gap-2 mt-4">
+                <button type="submit" disabled={saving}
+                  className="px-4 py-2 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white text-sm font-semibold transition-all shadow-md shadow-cyan-500/10 hover:shadow-cyan-500/25 disabled:opacity-50">
+                  {saving ? "Saving…" : "Save Device"}
+                </button>
+                <button type="button" onClick={() => setShowForm(false)}
+                  className={`px-4 py-2 rounded-lg text-sm transition-colors ${dark ? "bg-slate-800 hover:bg-slate-700 text-slate-300" : "bg-slate-100 hover:bg-slate-200 text-slate-700"}`}>
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Table */}
       <div className={`rounded-xl border overflow-hidden ${dark ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200"}`}>
@@ -518,13 +594,15 @@ function DevicesView({ devices, setDevices, dark, addDeviceToFirestore, deleteDe
             </thead>
             <tbody>
               <AnimatePresence>
-              {filtered.map(d => (
+              {filtered.map((d, index) => (
                 <motion.tr
                   layout
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95 }}
-                  key={d.id} className={`border-b text-sm transition-colors ${dark ? "border-slate-800 hover:bg-slate-800/50" : "border-slate-100 hover:bg-slate-50"}`}>
+                  transition={{ delay: Math.min(index * 0.04, 0.4), duration: 0.25, type: "spring", stiffness: 200, damping: 20 }}
+                  whileHover={{ scale: 1.002, backgroundColor: dark ? "rgba(30, 41, 59, 0.3)" : "rgba(241, 245, 249, 0.4)" }}
+                  key={d.id} className={`border-b text-sm transition-colors ${dark ? "border-slate-800" : "border-slate-100"}`}>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       <span className={`w-2 h-2 rounded-full shadow-lg ${statusDot(d.status)}`} />
@@ -533,15 +611,15 @@ function DevicesView({ devices, setDevices, dark, addDeviceToFirestore, deleteDe
                   </td>
                   <td className={`px-4 py-3 font-mono text-xs ${dark ? "text-slate-400" : "text-slate-500"}`}>{d.device_id}</td>
                   <td className="px-4 py-3">
-                    <span className={`capitalize text-xs px-2 py-0.5 rounded-full
-                      ${d.type === "vehicle" ? "bg-blue-500/10 text-blue-400" : d.type === "personnel" ? "bg-purple-500/10 text-purple-400" : "bg-slate-500/10 text-slate-400"}`}>
+                    <span className={`capitalize text-xs px-2.5 py-0.5 rounded-full border font-medium
+                      ${d.type === "vehicle" ? "bg-cyan-500/10 text-cyan-400 border-cyan-500/20" : d.type === "personnel" ? "bg-violet-500/10 text-violet-400 border-violet-500/20" : "bg-slate-500/10 text-slate-400 border-slate-500/20"}`}>
                       {d.type}
                     </span>
                   </td>
                   <td className="px-4 py-3">
-                    <span className={`capitalize text-xs font-medium px-2 py-0.5 rounded-full border
+                    <span className={`capitalize text-xs font-semibold px-2.5 py-0.5 rounded-full border
                       ${d.status === "inside"  ? "text-emerald-400 bg-emerald-500/10 border-emerald-500/20" :
-                        d.status === "outside" ? "text-red-400 bg-red-500/10 border-red-500/20" :
+                        d.status === "outside" ? "text-rose-400 bg-rose-500/10 border-rose-500/20" :
                                                   "text-slate-400 bg-slate-500/10 border-slate-500/20"}`}>
                       {d.status}
                     </span>
@@ -568,7 +646,7 @@ function DevicesView({ devices, setDevices, dark, addDeviceToFirestore, deleteDe
 }
 
 /** Geofences view */
-function GeofencesView({ geofences, setGeofences, dark, addGeofenceToFirestore, updateGeofenceInFirestore }) {
+function GeofencesView({ geofences, setGeofences, dark, addGeofenceToFirestore, updateGeofenceInFirestore, deleteGeofenceFromFirestore }) {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ name: "", description: "", shape: "circle", center_lat: "", center_lng: "", radius_m: "" });
   const [saving, setSaving] = useState(false);
@@ -594,6 +672,11 @@ function GeofencesView({ geofences, setGeofences, dark, addGeofenceToFirestore, 
     }
   }
 
+  async function handleDeleteGeofence(id) {
+    await deleteGeofenceFromFirestore(id);
+    setGeofences(prev => prev.filter(g => g.id !== id));
+  }
+
   const inputCls = `w-full px-3 py-2 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50
     ${dark ? "bg-slate-800 border-slate-700 text-white placeholder-slate-500" : "bg-white border-slate-300 text-slate-900 placeholder-slate-400"}`;
 
@@ -602,36 +685,46 @@ function GeofencesView({ geofences, setGeofences, dark, addGeofenceToFirestore, 
       <div className="flex items-center justify-between">
         <h2 className={`text-lg font-bold ${dark ? "text-white" : "text-slate-900"}`}>Geofences</h2>
         <button onClick={() => setShowForm(!showForm)}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-white text-sm font-medium transition-colors">
+          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white text-sm font-semibold transition-all shadow-md shadow-cyan-500/10 hover:shadow-cyan-500/25">
           <Plus className="w-4 h-4" /> New Geofence
         </button>
       </div>
 
-      {showForm && (
-        <form onSubmit={handleAdd} className={`rounded-xl border p-5 ${dark ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200"}`}>
-          <h3 className={`text-sm font-semibold mb-4 ${dark ? "text-white" : "text-slate-900"}`}>Create Geofence</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            <input required placeholder="Name (e.g. Main Depot)" value={form.name} onChange={e => setForm(f=>({...f,name:e.target.value}))} className={inputCls} />
-            <input placeholder="Description" value={form.description} onChange={e => setForm(f=>({...f,description:e.target.value}))} className={inputCls} />
-            <select value={form.shape} onChange={e => setForm(f=>({...f,shape:e.target.value}))} className={inputCls}>
-              <option value="circle">Circle</option>
-            </select>
-            <input required placeholder="Center Latitude (e.g. 17.385)" value={form.center_lat} onChange={e => setForm(f=>({...f,center_lat:e.target.value}))} className={inputCls} />
-            <input required placeholder="Center Longitude (e.g. 78.486)" value={form.center_lng} onChange={e => setForm(f=>({...f,center_lng:e.target.value}))} className={inputCls} />
-            <input required placeholder="Radius in meters (e.g. 500)" value={form.radius_m} onChange={e => setForm(f=>({...f,radius_m:e.target.value}))} className={inputCls} />
-          </div>
-          <div className="flex gap-2 mt-4">
-            <button type="submit" disabled={saving}
-              className="px-4 py-2 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-white text-sm font-medium disabled:opacity-50">
-              {saving ? "Saving…" : "Save Geofence"}
-            </button>
-            <button type="button" onClick={() => setShowForm(false)}
-              className={`px-4 py-2 rounded-lg text-sm ${dark ? "bg-slate-800 text-slate-300" : "bg-slate-100 text-slate-700"}`}>
-              Cancel
-            </button>
-          </div>
-        </form>
-      )}
+      <AnimatePresence>
+        {showForm && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ type: "spring", stiffness: 220, damping: 26 }}
+            className="overflow-hidden"
+          >
+            <form onSubmit={handleAdd} className={`rounded-xl border p-5 mb-5 ${dark ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200"}`}>
+              <h3 className={`text-sm font-semibold mb-4 ${dark ? "text-white" : "text-slate-900"}`}>Create Geofence</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                <input required placeholder="Name (e.g. Main Depot)" value={form.name} onChange={e => setForm(f=>({...f,name:e.target.value}))} className={inputCls} />
+                <input placeholder="Description" value={form.description} onChange={e => setForm(f=>({...f,description:e.target.value}))} className={inputCls} />
+                <select value={form.shape} onChange={e => setForm(f=>({...f,shape:e.target.value}))} className={inputCls}>
+                  <option value="circle">Circle</option>
+                </select>
+                <input required placeholder="Center Latitude (e.g. 17.385)" value={form.center_lat} onChange={e => setForm(f=>({...f,center_lat:e.target.value}))} className={inputCls} />
+                <input required placeholder="Center Longitude (e.g. 78.486)" value={form.center_lng} onChange={e => setForm(f=>({...f,center_lng:e.target.value}))} className={inputCls} />
+                <input required placeholder="Radius in meters (e.g. 500)" value={form.radius_m} onChange={e => setForm(f=>({...f,radius_m:e.target.value}))} className={inputCls} />
+              </div>
+              <div className="flex gap-2 mt-4">
+                <button type="submit" disabled={saving}
+                  className="px-4 py-2 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white text-sm font-semibold transition-all shadow-md shadow-cyan-500/10 hover:shadow-cyan-500/25 disabled:opacity-50">
+                  {saving ? "Saving…" : "Save Geofence"}
+                </button>
+                <button type="button" onClick={() => setShowForm(false)}
+                  className={`px-4 py-2 rounded-lg text-sm ${dark ? "bg-slate-800 text-slate-300" : "bg-slate-100 text-slate-700"}`}>
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <motion.div layout className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
         <AnimatePresence>
@@ -649,10 +742,16 @@ function GeofencesView({ geofences, setGeofences, dark, addGeofenceToFirestore, 
                 <h3 className={`font-semibold text-sm ${dark ? "text-white" : "text-slate-900"}`}>{g.name}</h3>
                 <p className={`text-xs mt-0.5 ${dark ? "text-slate-500" : "text-slate-500"}`}>{g.description || g.shape}</p>
               </div>
-              <button onClick={() => handleToggle(g.id)}
-                className={`p-1.5 rounded-md transition-colors ${g.is_active ? "text-emerald-400 bg-emerald-500/10" : "text-slate-400 bg-slate-500/10"}`}>
-                {g.is_active ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-              </button>
+              <div className="flex gap-1">
+                <button onClick={() => handleToggle(g.id)}
+                  className={`p-1.5 rounded-md transition-colors ${g.is_active ? "text-emerald-400 bg-emerald-500/10" : "text-slate-400 bg-slate-500/10"}`}>
+                  {g.is_active ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                </button>
+                <button onClick={() => handleDeleteGeofence(g.id)}
+                  className="p-1.5 rounded-md text-red-400 hover:bg-red-500/10 transition-colors">
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
             </div>
             <div className={`space-y-1 text-xs ${dark ? "text-slate-400" : "text-slate-500"}`}>
               <p><span className="font-medium">Shape:</span> {g.shape}</p>
@@ -674,7 +773,7 @@ function GeofencesView({ geofences, setGeofences, dark, addGeofenceToFirestore, 
 }
 
 /** Alerts view */
-function AlertsView({ alerts, setAlerts, dark, markAlertAsReadInFirestore }) {
+function AlertsView({ alerts, setAlerts, dark, markAlertAsReadInFirestore, deleteAlertFromFirestore }) {
   const [filter, setFilter]   = useState("all");  // all | unread | critical
   const [search, setSearch]   = useState("");
 
@@ -687,6 +786,11 @@ function AlertsView({ alerts, setAlerts, dark, markAlertAsReadInFirestore }) {
   async function markRead(id) {
     await markAlertAsReadInFirestore(id);
     setAlerts(prev => prev.map(a => a.id === id ? { ...a, is_read: true } : a));
+  }
+
+  async function handleDeleteAlert(id) {
+    await deleteAlertFromFirestore(id);
+    setAlerts(prev => prev.filter(a => a.id !== id));
   }
 
   function markAllRead() {
@@ -772,12 +876,18 @@ function AlertsView({ alerts, setAlerts, dark, markAlertAsReadInFirestore }) {
                 )}
               </div>
             </div>
-            {!a.is_read && (
-              <button onClick={() => markRead(a.id)}
-                className="text-xs text-cyan-400 hover:text-cyan-300 whitespace-nowrap mt-1">
-                Mark read
+            <div className="flex flex-col gap-1.5 items-end justify-between self-stretch mt-1">
+              {!a.is_read && (
+                <button onClick={() => markRead(a.id)}
+                  className="text-xs text-cyan-400 hover:text-cyan-300 whitespace-nowrap">
+                  Mark read
+                </button>
+              )}
+              <button onClick={() => handleDeleteAlert(a.id)}
+                className="p-1 rounded text-red-400 hover:bg-red-500/10 transition-colors mt-auto">
+                <Trash2 className="w-3.5 h-3.5" />
               </button>
-            )}
+            </div>
             </motion.div>
           ))}
         </AnimatePresence>
@@ -798,13 +908,12 @@ function AIView({ alerts, dark }) {
   async function generateReport() {
     setLoading(true);
     setError(null);
+    setReport(null);
     const result = await apiFetch("/alerts/ai-report", { method: "POST" });
-    if (result && result.summary) {
+    if (result && !result.error && result.summary) {
       setReport(result);
     } else {
-      // Simulate with mock when backend unavailable
-      await new Promise(r => setTimeout(r, 1800));
-      setReport(MOCK_AI_REPORT);
+      setError(result?.error || "Failed to generate report from backend.");
     }
     setLoading(false);
   }
@@ -822,7 +931,14 @@ function AIView({ alerts, dark }) {
         </button>
       </div>
 
-      {!report && !loading && (
+      {error && (
+        <div className="p-4 rounded-xl border flex items-center gap-3 text-sm bg-red-500/10 border-red-500/20 text-red-400">
+          <AlertTriangle className="w-5 h-5 flex-shrink-0" />
+          <p>{error}</p>
+        </div>
+      )}
+
+      {!report && !loading && !error && (
         <div className={`rounded-xl border-2 border-dashed p-16 text-center ${dark ? "border-slate-800" : "border-slate-200"}`}>
           <Cpu className={`w-12 h-12 mx-auto mb-3 ${dark ? "text-slate-700" : "text-slate-300"}`} />
           <p className={`text-sm ${dark ? "text-slate-500" : "text-slate-400"}`}>Click "Generate Report" to analyze today's geofence activity using AI</p>
@@ -889,7 +1005,9 @@ function AIView({ alerts, dark }) {
 }
 
 /** Export view */
-function ExportView({ alerts, devices, dark }) {
+function ExportView({ alerts, devices, dark, clearLocationLogsInFirestore }) {
+  const [clearing, setClearing] = useState(false);
+
   function downloadCSV() {
     exportCSV(alerts.map(a => ({
       ID:           a.id,
@@ -910,13 +1028,22 @@ function ExportView({ alerts, devices, dark }) {
     window.open(`${API}/export/alerts.csv`, "_blank");
   }
 
+  async function handleClearLogs() {
+    if (window.confirm("Are you sure you want to delete all location logs from the database? This action cannot be undone.")) {
+      setClearing(true);
+      await clearLocationLogsInFirestore();
+      window.alert("All location logs have been successfully deleted.");
+      setClearing(false);
+    }
+  }
+
   const cardCls = `rounded-xl border p-6 ${dark ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200"}`;
 
   return (
     <div className="space-y-5">
-      <h2 className={`text-lg font-bold ${dark ? "text-white" : "text-slate-900"}`}>Export Reports</h2>
+      <h2 className={`text-lg font-bold ${dark ? "text-white" : "text-slate-900"}`}>Export & Maintenance</h2>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {/* CSV export */}
         <div className={cardCls}>
           <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center mb-4">
@@ -950,6 +1077,19 @@ function ExportView({ alerts, devices, dark }) {
           })))}
             className="px-4 py-2 rounded-lg bg-blue-500 hover:bg-blue-400 text-white text-xs font-medium transition-colors">
             Download CSV
+          </button>
+        </div>
+
+        {/* Database maintenance */}
+        <div className={cardCls}>
+          <div className="w-10 h-10 rounded-lg bg-red-500/10 flex items-center justify-center mb-4">
+            <Trash2 className="w-5 h-5 text-red-400" />
+          </div>
+          <h3 className={`font-semibold text-sm mb-1 ${dark ? "text-white" : "text-slate-900"}`}>Clear Location Logs</h3>
+          <p className={`text-xs mb-4 ${dark ? "text-slate-500" : "text-slate-500"}`}>Permanently delete all historic location telemetry records from the database.</p>
+          <button onClick={handleClearLogs} disabled={clearing}
+            className="px-4 py-2 rounded-lg bg-red-500 hover:bg-red-400 text-white text-xs font-medium transition-colors disabled:opacity-50">
+            {clearing ? "Clearing..." : "Clear Location Logs"}
           </button>
         </div>
       </div>
@@ -986,7 +1126,7 @@ function ExportView({ alerts, devices, dark }) {
 
 /** Simulate a device GPS ping to the backend */
 function SimulatePing({ dark }) {
-  const [form, setForm] = useState({ device_id: "TRUCK-001", lat: "17.385", lng: "78.486" });
+  const [form, setForm] = useState({ device_id: "TRUCK-001", lat: "17.3988", lng: "78.5538" });
   const [res,  setRes]  = useState(null);
   const [busy, setBusy] = useState(false);
 
@@ -1041,14 +1181,14 @@ export default function App() {
   const [activeView,  setActiveView]  = useState("dashboard");
   const [dark,        setDark]        = useState(true);
   const [collapsed,   setCollapsed]   = useState(false);
-  const [devices,     setDevices]     = useState(MOCK_DEVICES);
-  const [geofences,   setGeofences]   = useState(MOCK_GEOFENCES);
-  const [alerts,      setAlerts]      = useState(MOCK_ALERTS);
+  const [devices,     setDevices]     = useState([]);
+  const [geofences,   setGeofences]   = useState([]);
+  const [alerts,      setAlerts]      = useState([]);
   const [online,      setOnline]      = useState(false);
   const [lastRefresh, setLastRefresh] = useState(new Date());
 
   useEffect(() => {
-    // If Firestore isn't available, keep using mock data and mark offline
+    // If Firestore isn't available, mark offline
     if (!db) {
       setOnline(false);
       return;
@@ -1124,8 +1264,35 @@ export default function App() {
   async function deleteDeviceFromFirestore(id) {
     try {
       await deleteDoc(doc(db, 'devices', id));
+      await apiFetch(`/devices/${id}`, { method: "DELETE" });
     } catch (error) {
       console.error('Error deleting device:', error);
+    }
+  }
+
+  async function deleteGeofenceFromFirestore(id) {
+    try {
+      await deleteDoc(doc(db, 'geofences', id));
+      await apiFetch(`/geofences/${id}`, { method: "DELETE" });
+    } catch (error) {
+      console.error('Error deleting geofence:', error);
+    }
+  }
+
+  async function deleteAlertFromFirestore(id) {
+    try {
+      await deleteDoc(doc(db, 'alerts', id));
+      await apiFetch(`/alerts/${id}`, { method: "DELETE" });
+    } catch (error) {
+      console.error('Error deleting alert:', error);
+    }
+  }
+
+  async function clearLocationLogsInFirestore() {
+    try {
+      await apiFetch(`/location/logs`, { method: "DELETE" });
+    } catch (error) {
+      console.error('Error clearing location logs:', error);
     }
   }
 
@@ -1162,12 +1329,12 @@ export default function App() {
   const unreadCount = alerts.filter(a => !a.is_read).length;
 
   const views = {
-    dashboard: <DashboardView devices={devices} alerts={alerts} dark={dark} />,
+    dashboard: <DashboardView devices={devices} alerts={alerts} dark={dark} markAlertAsReadInFirestore={markAlertAsReadInFirestore} deleteAlertFromFirestore={deleteAlertFromFirestore} />,
     devices:   <DevicesView   devices={devices} setDevices={setDevices} dark={dark} addDeviceToFirestore={addDeviceToFirestore} deleteDeviceFromFirestore={deleteDeviceFromFirestore} />,
-    geofences: <GeofencesView geofences={geofences} setGeofences={setGeofences} dark={dark} addGeofenceToFirestore={addGeofenceToFirestore} updateGeofenceInFirestore={updateGeofenceInFirestore} />,
-    alerts:    <AlertsView    alerts={alerts} setAlerts={setAlerts} dark={dark} markAlertAsReadInFirestore={markAlertAsReadInFirestore} />,
+    geofences: <GeofencesView geofences={geofences} setGeofences={setGeofences} dark={dark} addGeofenceToFirestore={addGeofenceToFirestore} updateGeofenceInFirestore={updateGeofenceInFirestore} deleteGeofenceFromFirestore={deleteGeofenceFromFirestore} />,
+    alerts:    <AlertsView    alerts={alerts} setAlerts={setAlerts} dark={dark} markAlertAsReadInFirestore={markAlertAsReadInFirestore} deleteAlertFromFirestore={deleteAlertFromFirestore} />,
     ai:        <AIView        alerts={alerts} dark={dark} />,
-    export:    <ExportView    alerts={alerts} devices={devices} dark={dark} />,
+    export:    <ExportView    alerts={alerts} devices={devices} dark={dark} clearLocationLogsInFirestore={clearLocationLogsInFirestore} />,
   };
 
   return (
@@ -1201,16 +1368,21 @@ export default function App() {
                 ? "text-emerald-400 border-emerald-500/20 bg-emerald-500/10"
                 : "text-slate-400 border-slate-500/20 bg-slate-500/10"}`}>
               {online ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
-              {online ? "Live" : "Mock data"}
+              {online ? "Live" : "Offline"}
             </div>
 
             {/* Unread badge */}
             {unreadCount > 0 && (
               <button onClick={() => setActiveView("alerts")}
-                className="relative flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full bg-red-500/10 border border-red-500/20 text-red-400">
-                <Bell className="w-3 h-3" />
+                className="relative flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-400 transition-colors hover:bg-rose-500/20">
+                <motion.div
+                  animate={{ rotate: [0, -12, 12, -12, 12, 0] }}
+                  transition={{ repeat: Infinity, duration: 1.5, repeatDelay: 3.5 }}
+                >
+                  <Bell className="w-3 h-3" />
+                </motion.div>
                 {unreadCount} unread
-                <span className="w-1.5 h-1.5 bg-red-400 rounded-full animate-pulse" />
+                <span className="w-1.5 h-1.5 bg-rose-400 rounded-full animate-pulse" />
               </button>
             )}
 
@@ -1227,10 +1399,10 @@ export default function App() {
           <AnimatePresence mode="wait">
             <motion.div
               key={activeView}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.3, ease: "easeOut" }}
+              initial={{ opacity: 0, y: 15, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -15, scale: 0.98 }}
+              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
               className="absolute inset-0 p-6 overflow-y-auto"
             >
               {views[activeView]}

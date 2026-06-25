@@ -1,30 +1,36 @@
-const nodemailer = require('nodemailer');
-
-// --- Email via Nodemailer / SMTP ---
-const transporter = nodemailer.createTransport({
-  host:   process.env.SMTP_HOST || 'smtp.sendgrid.net',
-  port:   Number(process.env.SMTP_PORT) || 587,
-  secure: process.env.SMTP_SECURE === 'true', // true for port 465, false for other ports
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-});
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
+const emailjs = require('@emailjs/nodejs');
 
 async function sendEmail(to, subject, html) {
   try {
-    const host = process.env.SMTP_HOST || 'smtp.sendgrid.net';
-    console.log(`[Email Service] Sending email to <${to}> via SMTP ${host}...`);
-    const info = await transporter.sendMail({
-      from: process.env.FROM_EMAIL || 'alerts@yourcompany.com',
-      to,
-      subject,
-      html,
-    });
-    console.log(`[Email Service] Email sent successfully: ${info.messageId}`);
-    return info;
+    const serviceId = process.env.EMAILJS_SERVICE_ID || 'service_xey5zfs';
+    const templateId = process.env.EMAILJS_TEMPLATE_ID;
+    const publicKey = process.env.EMAILJS_PUBLIC_KEY;
+    const privateKey = process.env.EMAILJS_PRIVATE_KEY;
+
+    console.log(`[Email Service] Sending email to <${to}> via EmailJS...`);
+
+    const result = await emailjs.send(
+      serviceId,
+      templateId,
+      {
+        to_email: to,
+        subject: subject,
+        message_html: html,
+        to_name: to,
+        from_name: 'GeoFence Alert System',
+      },
+      {
+        publicKey,
+        privateKey,
+      }
+    );
+
+    console.log(`[Email Service] Email sent successfully via EmailJS:`, result.text);
+    return result;
   } catch (error) {
-    console.error(`[Email Service] Failed to send email to <${to}>:`, error.message);
+    console.error(`[Email Service] Failed to send email to <${to}> via EmailJS:`, error.message || error);
     return null;
   }
 }

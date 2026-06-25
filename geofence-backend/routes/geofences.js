@@ -59,4 +59,34 @@ router.patch('/:id/toggle', async (req, res) => {
   }
 });
 
+// DELETE /api/geofences/:id
+router.delete('/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const batch = db.batch();
+    
+    // 1. Geofence ref
+    const geofenceRef = db.collection('geofences').doc(id);
+    batch.delete(geofenceRef);
+
+    // 2. Fetch and delete associated alerts
+    const alertsSnap = await db.collection('alerts').where('geofence_id', '==', id).get();
+    alertsSnap.docs.forEach(doc => {
+      batch.delete(doc.ref);
+    });
+
+    // 3. Fetch and delete associated location logs
+    const logsSnap = await db.collection('location_logs').where('geofence_id', '==', id).get();
+    logsSnap.docs.forEach(doc => {
+      batch.delete(doc.ref);
+    });
+
+    await batch.commit();
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;

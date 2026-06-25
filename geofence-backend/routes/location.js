@@ -26,17 +26,7 @@ router.post('/', async (req, res) => {
     for (const geofence of geofences) {
       const nowInside = isInsideGeofence(parseFloat(lat), parseFloat(lng), geofence);
 
-      // 3. Log location
-      await db.collection('location_logs').add({
-        device_id:   devDoc.id,
-        device_name: device.name,
-        lat:         parseFloat(lat),
-        lng:         parseFloat(lng),
-        accuracy_m:  accuracy_m || null,
-        geofence_id: geofence.id,
-        is_inside:   nowInside,
-        recorded_at: new Date(),
-      });
+
 
       // 4. Detect boundary crossing
       const prevInside = prevStatus === 'inside';
@@ -82,6 +72,30 @@ router.post('/', async (req, res) => {
     });
 
     res.json({ success: true, alerts_created: alertsCreated.length, alerts: alertsCreated });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// DELETE /api/location/logs
+router.delete('/logs', async (req, res) => {
+  try {
+    const { device_id, geofence_id } = req.query;
+    let queryRef = db.collection('location_logs');
+    if (device_id) {
+      queryRef = queryRef.where('device_id', '==', device_id);
+    }
+    if (geofence_id) {
+      queryRef = queryRef.where('geofence_id', '==', geofence_id);
+    }
+    const snap = await queryRef.get();
+    const batch = db.batch();
+    snap.docs.forEach(doc => {
+      batch.delete(doc.ref);
+    });
+    await batch.commit();
+    res.json({ success: true, deleted_count: snap.size });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });

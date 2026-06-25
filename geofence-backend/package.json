@@ -15,7 +15,7 @@
     "firebase": "^12.14.0",
     "firebase-admin": "^10.3.0",
     "node-cron": "^4.5.0",
-    "nodemailer": "^9.0.1",
+    "@emailjs/nodejs": "^5.0.2",
     "pg": "^8.11.2"
   },
   "devDependencies": {
