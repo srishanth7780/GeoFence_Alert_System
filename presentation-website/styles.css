@@ -1,0 +1,133 @@
+/* Base custom styles & reset overrides */
+* {
+  box-sizing: border-box;
+}
+
+/* Custom Scrollbar for Sidebar navigation */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 5px;
+}
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.3);
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.2);
+  border-radius: 9999px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.4);
+}
+
+
+
+/* Glassmorphism styling helper */
+.glass-panel {
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+body.light .glass-panel {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(15, 23, 42, 0.05);
+}
+
+/* Custom fade-in animations for active slides */
+.animate-fade-in {
+  animation: fadeIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Slide Transition stage layout overrides */
+#slideContentStage {
+  will-change: transform, opacity;
+}
+
+/* ----------------------------------------------------
+   STRICT PRINT STYLES FOR LANDSCAPE PDF presentation
+   ---------------------------------------------------- */
+@media print {
+  /* Set document size and orientation to landscape */
+  @page {
+    size: A4 landscape;
+    margin: 0;
+  }
+
+  /* Hide regular UI elements entirely */
+  body, html {
+    background: #ffffff !important;
+    color: #000000 !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+  
+  .slide-header,
+  .slide-footer,
+  .sidebar-menu,
+  #sidebarToggle,
+  #slideContentStage {
+    display: none !important;
+  }
+
+  /* Make sure print stage is visible */
+  #printStage {
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  /* Separate slides with absolute page break */
+  .print-slide-page {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    width: 297mm !important; /* Standard landscape A4 width */
+    height: 210mm !important; /* Standard landscape A4 height */
+    padding: 20mm !important;
+    page-break-after: always !important;
+    break-after: page !important;
+    box-sizing: border-box !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    overflow: hidden !important;
+    position: relative !important;
+  }
+
+  /* Override dark backgrounds inside print cards */
+  .print-slide-page * {
+    background: transparent !important;
+    color: #0f172a !important;
+    border-color: #e2e8f0 !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  /* Keep custom visual indicators colorful for printing, but clear */
+  .text-cyan-400, .text-cyan-500 { color: #0284c7 !important; }
+  .text-emerald-400, .text-emerald-500 { color: #16a34a !important; }
+  .text-rose-400, .text-rose-500 { color: #dc2626 !important; }
+  .text-indigo-400, .text-indigo-500 { color: #4f46e5 !important; }
+  .text-amber-400, .text-amber-500 { color: #d97706 !important; }
+
+  /* Ensure text sizing and visibility during printing */
+  .print-slide-page h2 {
+    font-size: 24pt !important;
+    font-weight: 800 !important;
+    color: #0f172a !important;
+    margin-bottom: 12pt !important;
+  }
+}

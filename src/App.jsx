@@ -1445,7 +1445,7 @@ export default function App() {
         {/* Footer */}
         <footer className={`px-6 py-3 border-t text-xs flex items-center justify-between
           ${dark ? "border-slate-800 text-slate-600" : "border-slate-200 text-slate-400"}`}>
-          <span>Geofence Alert System · Built with React + Vite + Tailwind</span>
+          <span>Geofence Alert System</span>
           <span>{devices.length} devices · {geofences.filter(g=>g.is_active).length} active zones · {alerts.length} alerts logged</span>
         </footer>
       </main>
