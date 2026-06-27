@@ -1239,36 +1239,135 @@ function LoginView({ onLogin, dark, setDark }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (username === "admin" && password === "geofence") {
+    if (username === "srishanth" && password === "1234567890") {
       onLogin();
     } else {
       setError("Invalid username or password");
     }
   };
 
+  // Floating badge data for background animation
+  const floatingBadges = [
+    { icon: Bell,           label: "ENTRY Alert",      color: "from-emerald-500 to-green-600",  glow: "shadow-emerald-500/30", x: "8%",  y: "12%", delay: 0,   dur: 6,  size: "w-10 h-10" },
+    { icon: AlertTriangle,  label: "EXIT Warning",     color: "from-rose-500 to-red-600",       glow: "shadow-rose-500/30",    x: "82%", y: "18%", delay: 1.2, dur: 7,  size: "w-9 h-9"  },
+    { icon: MapPin,         label: "Zone Breach",      color: "from-amber-500 to-orange-600",   glow: "shadow-amber-500/30",   x: "15%", y: "75%", delay: 0.6, dur: 8,  size: "w-8 h-8"  },
+    { icon: Truck,          label: "Vehicle Moving",   color: "from-blue-500 to-indigo-600",    glow: "shadow-blue-500/30",    x: "78%", y: "72%", delay: 2,   dur: 5,  size: "w-10 h-10" },
+    { icon: Shield,         label: "Perimeter Secured",color: "from-cyan-500 to-teal-600",      glow: "shadow-cyan-500/30",    x: "5%",  y: "45%", delay: 0.3, dur: 9,  size: "w-8 h-8"  },
+    { icon: Zap,            label: "Critical",         color: "from-purple-500 to-violet-600",  glow: "shadow-purple-500/30",  x: "90%", y: "48%", delay: 1.8, dur: 6,  size: "w-9 h-9"  },
+    { icon: Activity,       label: "Live Tracking",    color: "from-teal-500 to-cyan-600",      glow: "shadow-teal-500/30",    x: "45%", y: "8%",  delay: 0.9, dur: 7,  size: "w-8 h-8"  },
+    { icon: Wifi,           label: "Connected",        color: "from-sky-500 to-blue-600",       glow: "shadow-sky-500/30",     x: "50%", y: "88%", delay: 1.5, dur: 8,  size: "w-8 h-8"  },
+  ];
+
   return (
-    <div className={`min-h-screen flex flex-col justify-center items-center p-4 transition-colors duration-300 ${dark ? "bg-slate-950 text-white" : "bg-slate-50 text-slate-900"}`}>
+    <div className={`min-h-screen flex flex-col justify-center items-center p-4 transition-colors duration-300 relative overflow-hidden ${dark ? "bg-slate-950 text-white" : "bg-slate-50 text-slate-900"}`}>
+
+      {/* ── Animated grid background ── */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className={`absolute inset-0 ${dark ? "opacity-[0.03]" : "opacity-[0.04]"}`}
+          style={{
+            backgroundImage: `radial-gradient(circle, ${dark ? "#22d3ee" : "#0891b2"} 1px, transparent 1px)`,
+            backgroundSize: "40px 40px",
+          }}
+        />
+      </div>
+
+      {/* ── Radial glow behind login card ── */}
+      <div className={`absolute w-[600px] h-[600px] rounded-full blur-[120px] pointer-events-none ${dark ? "bg-cyan-500/5" : "bg-cyan-400/10"}`} />
+
+      {/* ── Floating bouncing alert badges ── */}
+      {floatingBadges.map((badge, i) => {
+        const Icon = badge.icon;
+        return (
+          <motion.div
+            key={i}
+            className="absolute pointer-events-none select-none"
+            style={{ left: badge.x, top: badge.y }}
+            initial={{ opacity: 0, scale: 0 }}
+            animate={{
+              opacity: [0, 0.85, 0.85, 0],
+              scale: [0.6, 1, 1, 0.6],
+              y: [0, -18, 18, 0],
+              x: [0, 8, -8, 0],
+              rotate: [0, 6, -6, 0],
+            }}
+            transition={{
+              duration: badge.dur,
+              repeat: Infinity,
+              delay: badge.delay,
+              ease: "easeInOut",
+            }}
+          >
+            <div className={`flex items-center gap-2 px-3 py-2 rounded-2xl bg-gradient-to-br ${badge.color} shadow-xl ${badge.glow} backdrop-blur-sm border border-white/10`}>
+              <div className={`${badge.size} rounded-lg bg-white/20 flex items-center justify-center`}>
+                <Icon className="w-4 h-4 text-white" />
+              </div>
+              <div className="hidden sm:block">
+                <p className="text-[10px] font-bold text-white/90 whitespace-nowrap">{badge.label}</p>
+                <p className="text-[8px] text-white/50 font-mono">
+                  {new Date(Date.now() - Math.random() * 3600000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        );
+      })}
+
+      {/* ── Orbiting ring particles ── */}
+      {[...Array(3)].map((_, i) => (
+        <motion.div
+          key={`ring-${i}`}
+          className={`absolute w-2 h-2 rounded-full pointer-events-none ${
+            i === 0 ? "bg-cyan-400" : i === 1 ? "bg-emerald-400" : "bg-purple-400"
+          }`}
+          style={{ left: "50%", top: "50%" }}
+          animate={{
+            x: [
+              Math.cos(0) * (150 + i * 60),
+              Math.cos(Math.PI * 0.5) * (150 + i * 60),
+              Math.cos(Math.PI) * (150 + i * 60),
+              Math.cos(Math.PI * 1.5) * (150 + i * 60),
+              Math.cos(Math.PI * 2) * (150 + i * 60),
+            ],
+            y: [
+              Math.sin(0) * (100 + i * 40),
+              Math.sin(Math.PI * 0.5) * (100 + i * 40),
+              Math.sin(Math.PI) * (100 + i * 40),
+              Math.sin(Math.PI * 1.5) * (100 + i * 40),
+              Math.sin(Math.PI * 2) * (100 + i * 40),
+            ],
+            opacity: [0.3, 0.8, 0.3],
+          }}
+          transition={{ duration: 8 + i * 3, repeat: Infinity, ease: "linear" }}
+        />
+      ))}
+
+      {/* ── Dark/Light toggle ── */}
       <button 
         onClick={() => setDark(!dark)}
-        className={`absolute top-4 right-4 p-2 rounded-lg transition-colors ${dark ? "hover:bg-slate-900 text-slate-400" : "hover:bg-slate-200 text-slate-600"}`}
+        className={`absolute top-4 right-4 z-20 p-2 rounded-lg transition-colors ${dark ? "hover:bg-slate-900 text-slate-400" : "hover:bg-slate-200 text-slate-600"}`}
       >
         {dark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
       </button>
 
+      {/* ── Login Card ── */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className={`w-full max-w-md p-8 rounded-2xl border shadow-2xl backdrop-blur-md transition-colors duration-300 ${
+        initial={{ opacity: 0, y: 20, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        className={`relative z-10 w-full max-w-md p-8 rounded-2xl border shadow-2xl backdrop-blur-xl transition-colors duration-300 ${
           dark 
-            ? "bg-slate-900/60 border-slate-800 shadow-slate-950/50" 
+            ? "bg-slate-900/70 border-slate-800 shadow-slate-950/50" 
             : "bg-white/80 border-slate-200 shadow-slate-200/50"
         }`}
       >
         <div className="flex flex-col items-center mb-6">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20 mb-3">
-            <Shield className="w-6 h-6 text-white animate-pulse" />
-          </div>
+          <motion.div
+            animate={{ rotate: [0, 5, -5, 0] }}
+            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+            className="w-14 h-14 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/25 mb-3"
+          >
+            <Shield className="w-7 h-7 text-white" />
+          </motion.div>
           <h2 className="text-xl font-bold tracking-tight">Access Control</h2>
           <p className={`text-xs mt-1 ${dark ? "text-slate-400" : "text-slate-500"}`}>
             Please authenticate to access the Geofence Dashboard
@@ -1277,8 +1376,9 @@ function LoginView({ onLogin, dark, setDark }) {
 
         {error && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
+            initial={{ opacity: 0, scale: 0.95, x: -10 }}
+            animate={{ opacity: 1, scale: 1, x: [0, -4, 4, -4, 4, 0] }}
+            transition={{ x: { duration: 0.4 } }}
             className="mb-4 p-3 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs flex items-center gap-2"
           >
             <XCircle className="w-4 h-4 flex-shrink-0" />
@@ -1298,10 +1398,10 @@ function LoginView({ onLogin, dark, setDark }) {
               <input
                 type="text"
                 required
-                placeholder="admin"
+                placeholder="Enter username"
                 value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                className={`w-full pl-9 pr-3 py-2 text-sm rounded-xl border outline-none transition-all ${
+                onChange={(e) => { setUsername(e.target.value); setError(""); }}
+                className={`w-full pl-9 pr-3 py-2.5 text-sm rounded-xl border outline-none transition-all ${
                   dark
                     ? "bg-slate-950 border-slate-800 text-white focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30"
                     : "bg-slate-50 border-slate-200 text-slate-900 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20"
@@ -1323,8 +1423,8 @@ function LoginView({ onLogin, dark, setDark }) {
                 required
                 placeholder="••••••••"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className={`w-full pl-9 pr-10 py-2 text-sm rounded-xl border outline-none transition-all ${
+                onChange={(e) => { setPassword(e.target.value); setError(""); }}
+                className={`w-full pl-9 pr-10 py-2.5 text-sm rounded-xl border outline-none transition-all ${
                   dark
                     ? "bg-slate-950 border-slate-800 text-white focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30"
                     : "bg-slate-50 border-slate-200 text-slate-900 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20"
@@ -1340,18 +1440,26 @@ function LoginView({ onLogin, dark, setDark }) {
             </div>
           </div>
 
-          <button
+          <motion.button
             type="submit"
-            className="w-full mt-2 py-2 text-sm font-semibold text-white bg-gradient-to-r from-cyan-500 to-blue-600 rounded-xl hover:from-cyan-400 hover:to-blue-500 transition-all duration-300 shadow-lg shadow-cyan-500/10 hover:shadow-cyan-500/20 cursor-pointer"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className="w-full mt-2 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-cyan-500 to-blue-600 rounded-xl hover:from-cyan-400 hover:to-blue-500 transition-all duration-300 shadow-lg shadow-cyan-500/15 hover:shadow-cyan-500/30 cursor-pointer"
           >
             Authenticate
-          </button>
+          </motion.button>
         </form>
-
-        <div className={`mt-6 pt-4 border-t text-center text-[10px] ${dark ? "border-slate-800 text-slate-500" : "border-slate-100 text-slate-400"}`}>
-          Default Credentials: <code className="font-mono bg-slate-950/20 px-1.5 py-0.5 rounded">admin</code> / <code className="font-mono bg-slate-950/20 px-1.5 py-0.5 rounded">geofence</code>
-        </div>
       </motion.div>
+
+      {/* ── Footer branding ── */}
+      <motion.p
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.8 }}
+        className={`absolute bottom-4 text-[10px] font-mono ${dark ? "text-slate-700" : "text-slate-300"}`}
+      >
+        GeoFence Alert System v1.0
+      </motion.p>
     </div>
   );
 }
