@@ -1226,43 +1226,27 @@ function SimulatePing({ dark }) {
 
 
 
-
-
 // ─────────────────────────────────────────────
-// AUTHENTICATION COMPONENT
+// ANIMATED BACKGROUND (reusable across pages)
 // ─────────────────────────────────────────────
-function LoginView({ onLogin, dark, setDark }) {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState("");
+const FLOATING_BADGES = [
+  { icon: Bell,           label: "ENTRY Alert",      color: "from-emerald-500 to-green-600",  glow: "shadow-emerald-500/30", x: "8%",  y: "12%", delay: 0,   dur: 6,  size: "w-10 h-10" },
+  { icon: AlertTriangle,  label: "EXIT Warning",     color: "from-rose-500 to-red-600",       glow: "shadow-rose-500/30",    x: "82%", y: "18%", delay: 1.2, dur: 7,  size: "w-9 h-9"  },
+  { icon: MapPin,         label: "Zone Breach",      color: "from-amber-500 to-orange-600",   glow: "shadow-amber-500/30",   x: "15%", y: "75%", delay: 0.6, dur: 8,  size: "w-8 h-8"  },
+  { icon: Truck,          label: "Vehicle Moving",   color: "from-blue-500 to-indigo-600",    glow: "shadow-blue-500/30",    x: "78%", y: "72%", delay: 2,   dur: 5,  size: "w-10 h-10" },
+  { icon: Shield,         label: "Perimeter Secured",color: "from-cyan-500 to-teal-600",      glow: "shadow-cyan-500/30",    x: "5%",  y: "45%", delay: 0.3, dur: 9,  size: "w-8 h-8"  },
+  { icon: Zap,            label: "Critical",         color: "from-purple-500 to-violet-600",  glow: "shadow-purple-500/30",  x: "90%", y: "48%", delay: 1.8, dur: 6,  size: "w-9 h-9"  },
+  { icon: Activity,       label: "Live Tracking",    color: "from-teal-500 to-cyan-600",      glow: "shadow-teal-500/30",    x: "45%", y: "8%",  delay: 0.9, dur: 7,  size: "w-8 h-8"  },
+  { icon: Wifi,           label: "Connected",        color: "from-sky-500 to-blue-600",       glow: "shadow-sky-500/30",     x: "50%", y: "88%", delay: 1.5, dur: 8,  size: "w-8 h-8"  },
+];
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (username === "srishanth" && password === "1234567890") {
-      onLogin();
-    } else {
-      setError("Invalid username or password");
-    }
-  };
-
-  // Floating badge data for background animation
-  const floatingBadges = [
-    { icon: Bell,           label: "ENTRY Alert",      color: "from-emerald-500 to-green-600",  glow: "shadow-emerald-500/30", x: "8%",  y: "12%", delay: 0,   dur: 6,  size: "w-10 h-10" },
-    { icon: AlertTriangle,  label: "EXIT Warning",     color: "from-rose-500 to-red-600",       glow: "shadow-rose-500/30",    x: "82%", y: "18%", delay: 1.2, dur: 7,  size: "w-9 h-9"  },
-    { icon: MapPin,         label: "Zone Breach",      color: "from-amber-500 to-orange-600",   glow: "shadow-amber-500/30",   x: "15%", y: "75%", delay: 0.6, dur: 8,  size: "w-8 h-8"  },
-    { icon: Truck,          label: "Vehicle Moving",   color: "from-blue-500 to-indigo-600",    glow: "shadow-blue-500/30",    x: "78%", y: "72%", delay: 2,   dur: 5,  size: "w-10 h-10" },
-    { icon: Shield,         label: "Perimeter Secured",color: "from-cyan-500 to-teal-600",      glow: "shadow-cyan-500/30",    x: "5%",  y: "45%", delay: 0.3, dur: 9,  size: "w-8 h-8"  },
-    { icon: Zap,            label: "Critical",         color: "from-purple-500 to-violet-600",  glow: "shadow-purple-500/30",  x: "90%", y: "48%", delay: 1.8, dur: 6,  size: "w-9 h-9"  },
-    { icon: Activity,       label: "Live Tracking",    color: "from-teal-500 to-cyan-600",      glow: "shadow-teal-500/30",    x: "45%", y: "8%",  delay: 0.9, dur: 7,  size: "w-8 h-8"  },
-    { icon: Wifi,           label: "Connected",        color: "from-sky-500 to-blue-600",       glow: "shadow-sky-500/30",     x: "50%", y: "88%", delay: 1.5, dur: 8,  size: "w-8 h-8"  },
-  ];
+function AnimatedBackground({ dark, subtle = false }) {
+  const opacityScale = subtle ? 0.45 : 1;
 
   return (
-    <div className={`min-h-screen flex flex-col justify-center items-center p-4 transition-colors duration-300 relative overflow-hidden ${dark ? "bg-slate-950 text-white" : "bg-slate-50 text-slate-900"}`}>
-
-      {/* ── Animated grid background ── */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+    <>
+      {/* ── Dot grid ── */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
         <div className={`absolute inset-0 ${dark ? "opacity-[0.03]" : "opacity-[0.04]"}`}
           style={{
             backgroundImage: `radial-gradient(circle, ${dark ? "#22d3ee" : "#0891b2"} 1px, transparent 1px)`,
@@ -1271,20 +1255,17 @@ function LoginView({ onLogin, dark, setDark }) {
         />
       </div>
 
-      {/* ── Radial glow behind login card ── */}
-      <div className={`absolute w-[600px] h-[600px] rounded-full blur-[120px] pointer-events-none ${dark ? "bg-cyan-500/5" : "bg-cyan-400/10"}`} />
-
       {/* ── Floating bouncing alert badges ── */}
-      {floatingBadges.map((badge, i) => {
+      {FLOATING_BADGES.map((badge, i) => {
         const Icon = badge.icon;
         return (
           <motion.div
             key={i}
-            className="absolute pointer-events-none select-none"
+            className="absolute pointer-events-none select-none z-0"
             style={{ left: badge.x, top: badge.y }}
             initial={{ opacity: 0, scale: 0 }}
             animate={{
-              opacity: [0, 0.85, 0.85, 0],
+              opacity: [0, 0.85 * opacityScale, 0.85 * opacityScale, 0],
               scale: [0.6, 1, 1, 0.6],
               y: [0, -18, 18, 0],
               x: [0, 8, -8, 0],
@@ -1312,14 +1293,14 @@ function LoginView({ onLogin, dark, setDark }) {
         );
       })}
 
-      {/* ── Orbiting ring particles ── */}
+      {/* ── Orbiting particles ── */}
       {[...Array(3)].map((_, i) => (
         <motion.div
           key={`ring-${i}`}
-          className={`absolute w-2 h-2 rounded-full pointer-events-none ${
+          className={`absolute w-2 h-2 rounded-full pointer-events-none z-0 ${
             i === 0 ? "bg-cyan-400" : i === 1 ? "bg-emerald-400" : "bg-purple-400"
           }`}
-          style={{ left: "50%", top: "50%" }}
+          style={{ left: "50%", top: "50%", opacity: subtle ? 0.25 : 1 }}
           animate={{
             x: [
               Math.cos(0) * (150 + i * 60),
@@ -1335,11 +1316,41 @@ function LoginView({ onLogin, dark, setDark }) {
               Math.sin(Math.PI * 1.5) * (100 + i * 40),
               Math.sin(Math.PI * 2) * (100 + i * 40),
             ],
-            opacity: [0.3, 0.8, 0.3],
+            opacity: subtle ? [0.15, 0.4, 0.15] : [0.3, 0.8, 0.3],
           }}
           transition={{ duration: 8 + i * 3, repeat: Infinity, ease: "linear" }}
         />
       ))}
+    </>
+  );
+}
+
+// ─────────────────────────────────────────────
+// AUTHENTICATION COMPONENT
+// ─────────────────────────────────────────────
+function LoginView({ onLogin, dark, setDark }) {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (username === "srishanth" && password === "1234567890") {
+      onLogin();
+    } else {
+      setError("Invalid username or password");
+    }
+  };
+
+  return (
+    <div className={`min-h-screen flex flex-col justify-center items-center p-4 transition-colors duration-300 relative overflow-hidden ${dark ? "bg-slate-950 text-white" : "bg-slate-50 text-slate-900"}`}>
+
+      {/* ── Shared animated background ── */}
+      <AnimatedBackground dark={dark} />
+
+      {/* ── Radial glow behind login card ── */}
+      <div className={`absolute w-[600px] h-[600px] rounded-full blur-[120px] pointer-events-none ${dark ? "bg-cyan-500/5" : "bg-cyan-400/10"}`} />
 
       {/* ── Dark/Light toggle ── */}
       <button 
@@ -1644,7 +1655,11 @@ export default function App() {
   }
 
   return (
-    <div className={`flex min-h-screen ${dark ? "bg-slate-950 text-white" : "bg-slate-50 text-slate-900"}`}>
+    <div className={`flex min-h-screen relative overflow-hidden ${dark ? "bg-slate-950 text-white" : "bg-slate-50 text-slate-900"}`}>
+
+      {/* ── Subtle animated background on all dashboard pages ── */}
+      <AnimatedBackground dark={dark} subtle />
+
       <Sidebar
         active={activeView} setActive={setActiveView}
         dark={dark} toggleDark={() => setDark(d => !d)}
@@ -1656,7 +1671,7 @@ export default function App() {
       />
 
       {/* Main content */}
-      <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
+      <main className="flex-1 flex flex-col min-w-0 overflow-hidden relative z-10">
         {/* Top bar */}
         <header className={`sticky top-0 z-30 flex items-center gap-4 px-6 py-4 border-b
           ${dark ? "bg-slate-950/90 border-slate-800 backdrop-blur-sm" : "bg-white/90 border-slate-200 backdrop-blur-sm"}`}>
