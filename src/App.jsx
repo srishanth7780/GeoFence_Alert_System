@@ -20,7 +20,7 @@ import {
   Truck, AlertTriangle, CheckCircle, XCircle, RefreshCw,
   Plus, Trash2, Eye, EyeOff, Wifi, WifiOff, Moon, Sun,
   TrendingUp, Activity, Clock, Filter, Search, X,
-  ChevronRight, Zap, Shield, Settings, Menu,
+  ChevronRight, Zap, Shield, Settings, Menu, LogOut,
 } from "lucide-react";
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis,
@@ -160,7 +160,7 @@ async function apiFetch(path, opts = {}) {
 // ─────────────────────────────────────────────
 
 /** Sidebar navigation */
-function Sidebar({ active, setActive, dark, toggleDark, collapsed, setCollapsed }) {
+function Sidebar({ active, setActive, dark, toggleDark, collapsed, setCollapsed, onLogout }) {
   const nav = [
     { id: "dashboard",  label: "Dashboard",  icon: LayoutDashboard },
     { id: "devices",    label: "Devices",    icon: Truck            },
@@ -279,6 +279,28 @@ function Sidebar({ active, setActive, dark, toggleDark, collapsed, setCollapsed 
             )}
           </AnimatePresence>
         </button>
+
+        {onLogout && (
+          <button
+            onClick={onLogout}
+            className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all text-rose-400 hover:bg-rose-500/10`}
+          >
+            <LogOut className="w-4 h-4 flex-shrink-0" />
+            <AnimatePresence initial={false}>
+              {!collapsed && (
+                <motion.span
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -10 }}
+                  transition={{ duration: 0.15 }}
+                  className="truncate"
+                >
+                  Logout
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </button>
+        )}
       </div>
     </motion.aside>
   );
@@ -1207,9 +1229,140 @@ function SimulatePing({ dark }) {
 
 
 // ─────────────────────────────────────────────
+// AUTHENTICATION COMPONENT
+// ─────────────────────────────────────────────
+function LoginView({ onLogin, dark, setDark }) {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (username === "admin" && password === "geofence") {
+      onLogin();
+    } else {
+      setError("Invalid username or password");
+    }
+  };
+
+  return (
+    <div className={`min-h-screen flex flex-col justify-center items-center p-4 transition-colors duration-300 ${dark ? "bg-slate-950 text-white" : "bg-slate-50 text-slate-900"}`}>
+      <button 
+        onClick={() => setDark(!dark)}
+        className={`absolute top-4 right-4 p-2 rounded-lg transition-colors ${dark ? "hover:bg-slate-905 text-slate-400" : "hover:bg-slate-200 text-slate-600"}`}
+      >
+        {dark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+      </button>
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className={`w-full max-w-md p-8 rounded-2xl border shadow-2xl backdrop-blur-md transition-colors duration-300 ${
+          dark 
+            ? "bg-slate-900/60 border-slate-800 shadow-slate-950/50" 
+            : "bg-white/80 border-slate-200 shadow-slate-200/50"
+        }`}
+      >
+        <div className="flex flex-col items-center mb-6">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20 mb-3">
+            <Shield className="w-6 h-6 text-white animate-pulse" />
+          </div>
+          <h2 className="text-xl font-bold tracking-tight">Access Control</h2>
+          <p className={`text-xs mt-1 ${dark ? "text-slate-400" : "text-slate-500"}`}>
+            Please authenticate to access the Geofence Dashboard
+          </p>
+        </div>
+
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="mb-4 p-3 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs flex items-center gap-2"
+          >
+            <XCircle className="w-4 h-4 flex-shrink-0" />
+            <span>{error}</span>
+          </motion.div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className={`block text-xs font-semibold uppercase mb-1.5 ${dark ? "text-slate-400" : "text-slate-600"}`}>
+              Username
+            </label>
+            <div className="relative">
+              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500">
+                <User className="w-4 h-4" />
+              </span>
+              <input
+                type="text"
+                required
+                placeholder="admin"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className={`w-full pl-9 pr-3 py-2 text-sm rounded-xl border outline-none transition-all ${
+                  dark
+                    ? "bg-slate-950 border-slate-800 text-white focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30"
+                    : "bg-slate-50 border-slate-200 text-slate-905 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20"
+                }`}
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className={`block text-xs font-semibold uppercase mb-1.5 ${dark ? "text-slate-400" : "text-slate-600"}`}>
+              Password
+            </label>
+            <div className="relative">
+              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500">
+                <Lock className="w-4 h-4" />
+              </span>
+              <input
+                type={showPassword ? "text" : "password"}
+                required
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className={`w-full pl-9 pr-10 py-2 text-sm rounded-xl border outline-none transition-all ${
+                  dark
+                    ? "bg-slate-950 border-slate-800 text-white focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30"
+                    : "bg-slate-50 border-slate-200 text-slate-905 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20"
+                }`}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-500 hover:text-slate-300"
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            className="w-full mt-2 py-2 text-sm font-semibold text-white bg-gradient-to-r from-cyan-500 to-blue-600 rounded-xl hover:from-cyan-400 hover:to-blue-500 transition-all duration-300 shadow-lg shadow-cyan-500/10 hover:shadow-cyan-500/20 cursor-pointer"
+          >
+            Authenticate
+          </button>
+        </form>
+
+        <div className={`mt-6 pt-4 border-t text-center text-[10px] ${dark ? "border-slate-800 text-slate-500" : "border-slate-100 text-slate-400"}`}>
+          Default Credentials: <code className="font-mono bg-slate-950/20 px-1.5 py-0.5 rounded">admin</code> / <code className="font-mono bg-slate-950/20 px-1.5 py-0.5 rounded">geofence</code>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────
 // MAIN APP
 // ─────────────────────────────────────────────
 export default function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    return localStorage.getItem("geofence_auth") === "true";
+  });
   const [activeView,  setActiveView]  = useState("dashboard");
   const [dark,        setDark]        = useState(true);
   const [collapsed,   setCollapsed]   = useState(false);
@@ -1369,12 +1522,29 @@ export default function App() {
     export:    <ExportView    alerts={alerts} devices={devices} dark={dark} clearLocationLogsInFirestore={clearLocationLogsInFirestore} />,
   };
 
+  if (!isAuthenticated) {
+    return (
+      <LoginView
+        onLogin={() => {
+          localStorage.setItem("geofence_auth", "true");
+          setIsAuthenticated(true);
+        }}
+        dark={dark}
+        setDark={setDark}
+      />
+    );
+  }
+
   return (
     <div className={`flex min-h-screen ${dark ? "bg-slate-950 text-white" : "bg-slate-50 text-slate-900"}`}>
       <Sidebar
         active={activeView} setActive={setActiveView}
         dark={dark} toggleDark={() => setDark(d => !d)}
         collapsed={collapsed} setCollapsed={setCollapsed}
+        onLogout={() => {
+          localStorage.removeItem("geofence_auth");
+          setIsAuthenticated(false);
+        }}
       />
 
       {/* Main content */}
