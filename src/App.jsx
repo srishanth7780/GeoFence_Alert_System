@@ -1226,104 +1226,7 @@ function SimulatePing({ dark }) {
 
 
 
-// ─────────────────────────────────────────────
-// ANIMATED BACKGROUND (reusable across pages)
-// ─────────────────────────────────────────────
-const FLOATING_BADGES = [
-  { icon: Bell,           label: "ENTRY Alert",      color: "from-emerald-500 to-green-600",  glow: "shadow-emerald-500/30", x: "8%",  y: "12%", delay: 0,   dur: 6,  size: "w-10 h-10" },
-  { icon: AlertTriangle,  label: "EXIT Warning",     color: "from-rose-500 to-red-600",       glow: "shadow-rose-500/30",    x: "82%", y: "18%", delay: 1.2, dur: 7,  size: "w-9 h-9"  },
-  { icon: MapPin,         label: "Zone Breach",      color: "from-amber-500 to-orange-600",   glow: "shadow-amber-500/30",   x: "15%", y: "75%", delay: 0.6, dur: 8,  size: "w-8 h-8"  },
-  { icon: Truck,          label: "Vehicle Moving",   color: "from-blue-500 to-indigo-600",    glow: "shadow-blue-500/30",    x: "78%", y: "72%", delay: 2,   dur: 5,  size: "w-10 h-10" },
-  { icon: Shield,         label: "Perimeter Secured",color: "from-cyan-500 to-teal-600",      glow: "shadow-cyan-500/30",    x: "5%",  y: "45%", delay: 0.3, dur: 9,  size: "w-8 h-8"  },
-  { icon: Zap,            label: "Critical",         color: "from-purple-500 to-violet-600",  glow: "shadow-purple-500/30",  x: "90%", y: "48%", delay: 1.8, dur: 6,  size: "w-9 h-9"  },
-  { icon: Activity,       label: "Live Tracking",    color: "from-teal-500 to-cyan-600",      glow: "shadow-teal-500/30",    x: "45%", y: "8%",  delay: 0.9, dur: 7,  size: "w-8 h-8"  },
-  { icon: Wifi,           label: "Connected",        color: "from-sky-500 to-blue-600",       glow: "shadow-sky-500/30",     x: "50%", y: "88%", delay: 1.5, dur: 8,  size: "w-8 h-8"  },
-];
 
-function AnimatedBackground({ dark, subtle = false }) {
-  const opacityScale = subtle ? 0.45 : 1;
-
-  return (
-    <>
-      {/* ── Dot grid ── */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-        <div className={`absolute inset-0 ${dark ? "opacity-[0.03]" : "opacity-[0.04]"}`}
-          style={{
-            backgroundImage: `radial-gradient(circle, ${dark ? "#22d3ee" : "#0891b2"} 1px, transparent 1px)`,
-            backgroundSize: "40px 40px",
-          }}
-        />
-      </div>
-
-      {/* ── Floating bouncing alert badges ── */}
-      {FLOATING_BADGES.map((badge, i) => {
-        const Icon = badge.icon;
-        return (
-          <motion.div
-            key={i}
-            className="absolute pointer-events-none select-none z-0"
-            style={{ left: badge.x, top: badge.y }}
-            initial={{ opacity: 0, scale: 0 }}
-            animate={{
-              opacity: [0, 0.85 * opacityScale, 0.85 * opacityScale, 0],
-              scale: [0.6, 1, 1, 0.6],
-              y: [0, -18, 18, 0],
-              x: [0, 8, -8, 0],
-              rotate: [0, 6, -6, 0],
-            }}
-            transition={{
-              duration: badge.dur,
-              repeat: Infinity,
-              delay: badge.delay,
-              ease: "easeInOut",
-            }}
-          >
-            <div className={`flex items-center gap-2 px-3 py-2 rounded-2xl bg-gradient-to-br ${badge.color} shadow-xl ${badge.glow} backdrop-blur-sm border border-white/10`}>
-              <div className={`${badge.size} rounded-lg bg-white/20 flex items-center justify-center`}>
-                <Icon className="w-4 h-4 text-white" />
-              </div>
-              <div className="hidden sm:block">
-                <p className="text-[10px] font-bold text-white/90 whitespace-nowrap">{badge.label}</p>
-                <p className="text-[8px] text-white/50 font-mono">
-                  {new Date(Date.now() - Math.random() * 3600000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                </p>
-              </div>
-            </div>
-          </motion.div>
-        );
-      })}
-
-      {/* ── Orbiting particles ── */}
-      {[...Array(3)].map((_, i) => (
-        <motion.div
-          key={`ring-${i}`}
-          className={`absolute w-2 h-2 rounded-full pointer-events-none z-0 ${
-            i === 0 ? "bg-cyan-400" : i === 1 ? "bg-emerald-400" : "bg-purple-400"
-          }`}
-          style={{ left: "50%", top: "50%", opacity: subtle ? 0.25 : 1 }}
-          animate={{
-            x: [
-              Math.cos(0) * (150 + i * 60),
-              Math.cos(Math.PI * 0.5) * (150 + i * 60),
-              Math.cos(Math.PI) * (150 + i * 60),
-              Math.cos(Math.PI * 1.5) * (150 + i * 60),
-              Math.cos(Math.PI * 2) * (150 + i * 60),
-            ],
-            y: [
-              Math.sin(0) * (100 + i * 40),
-              Math.sin(Math.PI * 0.5) * (100 + i * 40),
-              Math.sin(Math.PI) * (100 + i * 40),
-              Math.sin(Math.PI * 1.5) * (100 + i * 40),
-              Math.sin(Math.PI * 2) * (100 + i * 40),
-            ],
-            opacity: subtle ? [0.15, 0.4, 0.15] : [0.3, 0.8, 0.3],
-          }}
-          transition={{ duration: 8 + i * 3, repeat: Infinity, ease: "linear" }}
-        />
-      ))}
-    </>
-  );
-}
 
 // ─────────────────────────────────────────────
 // AUTHENTICATION COMPONENT
@@ -1333,6 +1236,7 @@ function LoginView({ onLogin, dark, setDark }) {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+  const canvasRef = useRef(null);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -1343,16 +1247,147 @@ function LoginView({ onLogin, dark, setDark }) {
     }
   };
 
+  // Particle canvas background effect
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
+    let animationFrameId;
+    let particles = [];
+    const mouse = { x: null, y: null, radius: 200 };
+
+    class Particle {
+      constructor(x, y, directionX, directionY, size, color) {
+        this.x = x;
+        this.y = y;
+        this.directionX = directionX;
+        this.directionY = directionY;
+        this.size = size;
+        this.color = color;
+      }
+
+      draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2, false);
+        ctx.fillStyle = this.color;
+        ctx.fill();
+      }
+
+      update() {
+        if (this.x > canvas.width || this.x < 0) this.directionX = -this.directionX;
+        if (this.y > canvas.height || this.y < 0) this.directionY = -this.directionY;
+
+        if (mouse.x !== null && mouse.y !== null) {
+          let dx = mouse.x - this.x;
+          let dy = mouse.y - this.y;
+          let distance = Math.sqrt(dx * dx + dy * dy);
+          if (distance < mouse.radius + this.size) {
+            const forceDirectionX = dx / distance;
+            const forceDirectionY = dy / distance;
+            const force = (mouse.radius - distance) / mouse.radius;
+            this.x -= forceDirectionX * force * 5;
+            this.y -= forceDirectionY * force * 5;
+          }
+        }
+
+        this.x += this.directionX;
+        this.y += this.directionY;
+        this.draw();
+      }
+    }
+
+    function init() {
+      particles = [];
+      let numberOfParticles = (canvas.height * canvas.width) / 12000;
+      for (let i = 0; i < numberOfParticles; i++) {
+        let size = (Math.random() * 2) + 1;
+        let x = Math.random() * canvas.width;
+        let y = Math.random() * canvas.height;
+        let directionX = (Math.random() * 0.4) - 0.2;
+        let directionY = (Math.random() * 0.4) - 0.2;
+        let color = 'rgba(56, 189, 248, 0.7)';
+        particles.push(new Particle(x, y, directionX, directionY, size, color));
+      }
+    }
+
+    const resizeCanvas = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      init();
+    };
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    const connect = () => {
+      for (let a = 0; a < particles.length; a++) {
+        for (let b = a; b < particles.length; b++) {
+          let distance = ((particles[a].x - particles[b].x) ** 2)
+            + ((particles[a].y - particles[b].y) ** 2);
+          
+          if (distance < (canvas.width / 7) * (canvas.height / 7)) {
+            let opacityValue = 1 - (distance / 20000);
+
+            let dx_mouse_a = particles[a].x - mouse.x;
+            let dy_mouse_a = particles[a].y - mouse.y;
+            let distance_mouse_a = Math.sqrt(dx_mouse_a * dx_mouse_a + dy_mouse_a * dy_mouse_a);
+
+            if (mouse.x && distance_mouse_a < mouse.radius) {
+              ctx.strokeStyle = `rgba(255, 255, 255, ${opacityValue})`;
+            } else {
+              ctx.strokeStyle = `rgba(56, 189, 248, ${opacityValue * 0.5})`;
+            }
+
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(particles[a].x, particles[a].y);
+            ctx.lineTo(particles[b].x, particles[b].y);
+            ctx.stroke();
+          }
+        }
+      }
+    };
+
+    const animate = () => {
+      animationFrameId = requestAnimationFrame(animate);
+      ctx.fillStyle = dark ? 'rgba(2, 6, 23, 1)' : 'rgba(248, 250, 252, 1)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      for (let i = 0; i < particles.length; i++) {
+        particles[i].color = dark ? 'rgba(56, 189, 248, 0.7)' : 'rgba(14, 116, 144, 0.5)';
+        particles[i].update();
+      }
+      connect();
+    };
+
+    const handleMouseMove = (event) => {
+      mouse.x = event.clientX;
+      mouse.y = event.clientY;
+    };
+    const handleMouseOut = () => {
+      mouse.x = null;
+      mouse.y = null;
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseout', handleMouseOut);
+
+    init();
+    animate();
+
+    return () => {
+      window.removeEventListener('resize', resizeCanvas);
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseout', handleMouseOut);
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, [dark]);
+
   return (
-    <div className={`min-h-screen flex flex-col justify-center items-center p-4 transition-colors duration-300 relative overflow-hidden ${dark ? "bg-slate-950 text-white" : "bg-slate-50 text-slate-900"}`}>
+    <div className="relative min-h-screen w-full flex flex-col justify-center items-center overflow-hidden">
+      {/* Particle Canvas Background */}
+      <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />
 
-      {/* ── Shared animated background ── */}
-      <AnimatedBackground dark={dark} />
-
-      {/* ── Radial glow behind login card ── */}
-      <div className={`absolute w-[600px] h-[600px] rounded-full blur-[120px] pointer-events-none ${dark ? "bg-cyan-500/5" : "bg-cyan-400/10"}`} />
-
-      {/* ── Dark/Light toggle ── */}
+      {/* Theme Toggle */}
       <button 
         onClick={() => setDark(!dark)}
         className={`absolute top-4 right-4 z-20 p-2 rounded-lg transition-colors ${dark ? "hover:bg-slate-900 text-slate-400" : "hover:bg-slate-200 text-slate-600"}`}
@@ -1360,26 +1395,27 @@ function LoginView({ onLogin, dark, setDark }) {
         {dark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
       </button>
 
-      {/* ── Login Card ── */}
+      {/* Login Card */}
       <motion.div
         initial={{ opacity: 0, y: 20, scale: 0.95 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
         className={`relative z-10 w-full max-w-md p-8 rounded-2xl border shadow-2xl backdrop-blur-xl transition-colors duration-300 ${
           dark 
-            ? "bg-slate-900/70 border-slate-800 shadow-slate-950/50" 
-            : "bg-white/80 border-slate-200 shadow-slate-200/50"
+            ? "bg-slate-900/70 border-slate-700/50 shadow-cyan-500/5" 
+            : "bg-white/70 border-slate-200 shadow-slate-300/30"
         }`}
       >
         <div className="flex flex-col items-center mb-6">
-          <motion.div
-            animate={{ rotate: [0, 5, -5, 0] }}
-            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-            className="w-14 h-14 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/25 mb-3"
+          <motion.div 
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+            className="w-14 h-14 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/30 mb-4"
           >
             <Shield className="w-7 h-7 text-white" />
           </motion.div>
-          <h2 className="text-xl font-bold tracking-tight">Access Control</h2>
+          <h2 className={`text-xl font-bold tracking-tight ${dark ? "text-white" : "text-slate-900"}`}>Access Control</h2>
           <p className={`text-xs mt-1 ${dark ? "text-slate-400" : "text-slate-500"}`}>
             Please authenticate to access the Geofence Dashboard
           </p>
@@ -1387,9 +1423,8 @@ function LoginView({ onLogin, dark, setDark }) {
 
         {error && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, x: -10 }}
-            animate={{ opacity: 1, scale: 1, x: [0, -4, 4, -4, 4, 0] }}
-            transition={{ x: { duration: 0.4 } }}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
             className="mb-4 p-3 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs flex items-center gap-2"
           >
             <XCircle className="w-4 h-4 flex-shrink-0" />
@@ -1411,11 +1446,11 @@ function LoginView({ onLogin, dark, setDark }) {
                 required
                 placeholder="Enter username"
                 value={username}
-                onChange={(e) => { setUsername(e.target.value); setError(""); }}
+                onChange={(e) => setUsername(e.target.value)}
                 className={`w-full pl-9 pr-3 py-2.5 text-sm rounded-xl border outline-none transition-all ${
                   dark
-                    ? "bg-slate-950 border-slate-800 text-white focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30"
-                    : "bg-slate-50 border-slate-200 text-slate-900 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20"
+                    ? "bg-slate-950/50 border-slate-700 text-white placeholder:text-slate-600 focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30"
+                    : "bg-white/50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20"
                 }`}
               />
             </div>
@@ -1434,17 +1469,17 @@ function LoginView({ onLogin, dark, setDark }) {
                 required
                 placeholder="••••••••"
                 value={password}
-                onChange={(e) => { setPassword(e.target.value); setError(""); }}
+                onChange={(e) => setPassword(e.target.value)}
                 className={`w-full pl-9 pr-10 py-2.5 text-sm rounded-xl border outline-none transition-all ${
                   dark
-                    ? "bg-slate-950 border-slate-800 text-white focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30"
-                    : "bg-slate-50 border-slate-200 text-slate-900 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20"
+                    ? "bg-slate-950/50 border-slate-700 text-white placeholder:text-slate-600 focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30"
+                    : "bg-white/50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20"
                 }`}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-500 hover:text-slate-300"
+                className={`absolute inset-y-0 right-0 pr-3 flex items-center ${dark ? "text-slate-500 hover:text-slate-300" : "text-slate-400 hover:text-slate-600"}`}
               >
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
@@ -1452,25 +1487,15 @@ function LoginView({ onLogin, dark, setDark }) {
           </div>
 
           <motion.button
-            type="submit"
-            whileHover={{ scale: 1.02 }}
+            whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.98 }}
-            className="w-full mt-2 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-cyan-500 to-blue-600 rounded-xl hover:from-cyan-400 hover:to-blue-500 transition-all duration-300 shadow-lg shadow-cyan-500/15 hover:shadow-cyan-500/30 cursor-pointer"
+            type="submit"
+            className="w-full mt-2 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-cyan-500 to-blue-600 rounded-xl hover:from-cyan-400 hover:to-blue-500 transition-all duration-300 shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/30 cursor-pointer"
           >
             Authenticate
           </motion.button>
         </form>
       </motion.div>
-
-      {/* ── Footer branding ── */}
-      <motion.p
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.8 }}
-        className={`absolute bottom-4 text-[10px] font-mono ${dark ? "text-slate-700" : "text-slate-300"}`}
-      >
-        GeoFence Alert System v1.0
-      </motion.p>
     </div>
   );
 }
@@ -1655,11 +1680,7 @@ export default function App() {
   }
 
   return (
-    <div className={`flex min-h-screen relative overflow-hidden ${dark ? "bg-slate-950 text-white" : "bg-slate-50 text-slate-900"}`}>
-
-      {/* ── Subtle animated background on all dashboard pages ── */}
-      <AnimatedBackground dark={dark} subtle />
-
+    <div className={`flex min-h-screen ${dark ? "bg-slate-950 text-white" : "bg-slate-50 text-slate-900"}`}>
       <Sidebar
         active={activeView} setActive={setActiveView}
         dark={dark} toggleDark={() => setDark(d => !d)}
@@ -1671,7 +1692,7 @@ export default function App() {
       />
 
       {/* Main content */}
-      <main className="flex-1 flex flex-col min-w-0 overflow-hidden relative z-10">
+      <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Top bar */}
         <header className={`sticky top-0 z-30 flex items-center gap-4 px-6 py-4 border-b
           ${dark ? "bg-slate-950/90 border-slate-800 backdrop-blur-sm" : "bg-white/90 border-slate-200 backdrop-blur-sm"}`}>
