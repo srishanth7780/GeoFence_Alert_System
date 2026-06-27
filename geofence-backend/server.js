@@ -85,5 +85,5 @@ cron.schedule('55 23 * * *', async () => {
 
 app.get('/health', (req, res) => res.json({ status: 'ok', time: new Date().toISOString() }));
 
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT || "https://geofence-backend-8q4a.onrender.com";
 app.listen(PORT, () => console.log(`Geofence API running on :${PORT}`));

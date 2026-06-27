@@ -30,7 +30,7 @@ import {
 // ─────────────────────────────────────────────
 // CONFIG  — point to your backend
 // ─────────────────────────────────────────────
-const API = "http://localhost:4000/api";
+const API = "https://geofence-backend-8q4a.onrender.com/api";
 
 // ─────────────────────────────────────────────
 // DYNAMIC CHART DATA GENERATOR
