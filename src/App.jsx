@@ -20,7 +20,7 @@ import {
   Truck, AlertTriangle, CheckCircle, XCircle, RefreshCw,
   Plus, Trash2, Eye, EyeOff, Wifi, WifiOff, Moon, Sun,
   TrendingUp, Activity, Clock, Filter, Search, X,
-  ChevronRight, Zap, Shield, Settings, Menu, LogOut,
+  ChevronRight, Zap, Shield, Settings, Menu, LogOut, User, Lock,
 } from "lucide-react";
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis,
@@ -1250,7 +1250,7 @@ function LoginView({ onLogin, dark, setDark }) {
     <div className={`min-h-screen flex flex-col justify-center items-center p-4 transition-colors duration-300 ${dark ? "bg-slate-950 text-white" : "bg-slate-50 text-slate-900"}`}>
       <button 
         onClick={() => setDark(!dark)}
-        className={`absolute top-4 right-4 p-2 rounded-lg transition-colors ${dark ? "hover:bg-slate-905 text-slate-400" : "hover:bg-slate-200 text-slate-600"}`}
+        className={`absolute top-4 right-4 p-2 rounded-lg transition-colors ${dark ? "hover:bg-slate-900 text-slate-400" : "hover:bg-slate-200 text-slate-600"}`}
       >
         {dark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
       </button>
@@ -1304,7 +1304,7 @@ function LoginView({ onLogin, dark, setDark }) {
                 className={`w-full pl-9 pr-3 py-2 text-sm rounded-xl border outline-none transition-all ${
                   dark
                     ? "bg-slate-950 border-slate-800 text-white focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30"
-                    : "bg-slate-50 border-slate-200 text-slate-905 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20"
+                    : "bg-slate-50 border-slate-200 text-slate-900 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20"
                 }`}
               />
             </div>
@@ -1327,7 +1327,7 @@ function LoginView({ onLogin, dark, setDark }) {
                 className={`w-full pl-9 pr-10 py-2 text-sm rounded-xl border outline-none transition-all ${
                   dark
                     ? "bg-slate-950 border-slate-800 text-white focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30"
-                    : "bg-slate-50 border-slate-200 text-slate-905 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20"
+                    : "bg-slate-50 border-slate-200 text-slate-900 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20"
                 }`}
               />
               <button
