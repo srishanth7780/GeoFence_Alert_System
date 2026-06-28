@@ -1708,11 +1708,11 @@ export default function App() {
       {isMobile && mobileMenuOpen && (
         <div 
           onClick={() => setMobileMenuOpen(false)}
-          className="fixed inset-0 z-45 bg-black/40 backdrop-blur-xs pointer-events-auto cursor-pointer"
+          className="fixed inset-0 z-40 bg-black/15 pointer-events-auto cursor-pointer"
         />
       )}
 
-      <div className="relative z-10 flex w-full min-h-screen bg-transparent pointer-events-none">
+      {isMobile && (
         <Sidebar
           active={activeView} setActive={setActiveView}
           dark={dark} toggleDark={() => setDark(d => !d)}
@@ -1725,6 +1725,23 @@ export default function App() {
           mobileMenuOpen={mobileMenuOpen}
           setMobileMenuOpen={setMobileMenuOpen}
         />
+      )}
+
+      <div className="relative z-10 flex w-full min-h-screen bg-transparent pointer-events-none">
+        {!isMobile && (
+          <Sidebar
+            active={activeView} setActive={setActiveView}
+            dark={dark} toggleDark={() => setDark(d => !d)}
+            collapsed={collapsed} setCollapsed={setCollapsed}
+            onLogout={() => {
+              localStorage.removeItem("geofence_auth");
+              setIsAuthenticated(false);
+            }}
+            isMobile={isMobile}
+            mobileMenuOpen={mobileMenuOpen}
+            setMobileMenuOpen={setMobileMenuOpen}
+          />
+        )}
 
         {/* Main content */}
         <main className="flex-1 flex flex-col min-w-0 overflow-hidden bg-transparent pointer-events-none">
