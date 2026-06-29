@@ -181,7 +181,7 @@ function Sidebar({ active, setActive, dark, toggleDark, collapsed, setCollapsed,
       className={`
         flex flex-col h-screen overflow-hidden pointer-events-auto
         ${isMobile ? "fixed left-0 top-0 bottom-0 z-50 border-r" : "sticky top-0 z-40 border-r"}
-        ${dark ? "bg-slate-900/15 border-slate-700/15 backdrop-blur-sm" : "bg-white/15 border-slate-200/10 backdrop-blur-sm"}
+        ${dark ? "bg-slate-900/15 border-slate-700/15 backdrop-blur-sm" : "bg-white/70 border-indigo-100/50 backdrop-blur-md shadow-xl shadow-indigo-100/20"}
       `}
     >
       {/* Logo */}
@@ -198,14 +198,14 @@ function Sidebar({ active, setActive, dark, toggleDark, collapsed, setCollapsed,
               transition={{ duration: 0.15 }}
               className="flex-1 min-w-0"
             >
-              <p className={`text-sm font-bold tracking-tight truncate ${dark ? "text-white" : "text-slate-900"}`}>GeoFence</p>
+              <p className={`text-sm font-bold tracking-tight truncate ${dark ? "text-white" : "text-indigo-950"}`}>GeoFence</p>
               <p className="text-xs text-slate-500 truncate">Alert System</p>
             </motion.div>
           )}
         </AnimatePresence>
         <button
           onClick={() => isMobile ? setMobileMenuOpen(false) : setCollapsed(!collapsed)}
-          className={`ml-auto p-1 rounded-md ${dark ? "hover:bg-slate-800 text-slate-400" : "hover:bg-slate-100 text-slate-500"}`}
+          className={`ml-auto p-1 rounded-md ${dark ? "hover:bg-slate-800 text-slate-400" : "hover:bg-indigo-50 text-slate-500"}`}
         >
           {isMobile ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
         </button>
@@ -230,7 +230,7 @@ function Sidebar({ active, setActive, dark, toggleDark, collapsed, setCollapsed,
                   ? "bg-gradient-to-r from-cyan-500/20 to-blue-600/20 text-cyan-400 border border-cyan-500/20"
                   : dark
                     ? "text-slate-400 hover:bg-slate-800 hover:text-slate-200"
-                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"}
+                    : "text-slate-600 hover:bg-indigo-50 hover:text-slate-900"}
               `}
             >
               <Icon className={`w-4 h-4 flex-shrink-0 ${isActive ? "text-cyan-400" : ""}`} />
@@ -269,7 +269,7 @@ function Sidebar({ active, setActive, dark, toggleDark, collapsed, setCollapsed,
         <button
           onClick={toggleDark}
           className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all
-            ${dark ? "text-slate-400 hover:bg-slate-800" : "text-slate-500 hover:bg-slate-100"}`}
+            ${dark ? "text-slate-400 hover:bg-slate-800" : "text-slate-500 hover:bg-indigo-50"}`}
         >
           {dark ? <Sun className="w-4 h-4 flex-shrink-0" /> : <Moon className="w-4 h-4 flex-shrink-0" />}
           <AnimatePresence initial={false}>
@@ -328,16 +328,16 @@ function StatCard({ label, value, sub, icon: Icon, color, dark }) {
       variants={itemVariants}
       onHoverStart={() => setHovered(true)}
       onHoverEnd={() => setHovered(false)}
-      whileHover={{ y: -5, scale: 1.02, boxShadow: dark ? "0 10px 30px -10px rgba(6,182,212,0.15)" : "0 10px 30px -10px rgba(0,0,0,0.06)" }}
+      whileHover={{ y: -5, scale: 1.02, boxShadow: dark ? "0 10px 30px -10px rgba(6,182,212,0.15)" : "0 20px 40px -10px rgba(99,102,241,0.25)" }}
       transition={{ type: "spring", stiffness: 300, damping: 20 }}
       className={`
       rounded-xl border bg-gradient-to-br p-5 ${colors[color]}
-      ${dark ? "bg-slate-900/10 backdrop-blur-sm border-slate-700/10" : "bg-white/10 backdrop-blur-sm border-slate-200/10"}
+      ${dark ? "bg-slate-900/10 backdrop-blur-sm border-slate-700/10" : "bg-white/70 backdrop-blur-md border-indigo-100/60 shadow-lg shadow-indigo-100/10"}
     `}>
       <div className="flex items-start justify-between">
         <div>
           <p className={`text-xs font-medium uppercase tracking-wider mb-1 ${dark ? "text-slate-500" : "text-slate-500"}`}>{label}</p>
-          <p className={`text-3xl font-bold ${dark ? "text-white" : "text-slate-900"}`}>{value}</p>
+          <p className={`text-3xl font-bold ${dark ? "text-white" : "text-indigo-950"}`}>{value}</p>
           {sub && <p className={`text-xs mt-1 ${colors[color].split(" ").at(-1)}`}>{sub}</p>}
         </div>
         <motion.div 
@@ -370,7 +370,7 @@ function AlertItem({ alert, onMarkRead, onDelete, dark }) {
       <div className="mt-0.5">{alertIcon(alert.alert_type)}</div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className={`text-sm font-semibold ${dark ? "text-white" : "text-slate-900"}`}>{alert.device_name}</span>
+          <span className={`text-sm font-semibold ${dark ? "text-white" : "text-indigo-950"}`}>{alert.device_name}</span>
           <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${priorityColor(alert.priority)}`}>
             {alert.priority}
           </span>
@@ -378,7 +378,7 @@ function AlertItem({ alert, onMarkRead, onDelete, dark }) {
             <span className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse" />
           )}
         </div>
-        <p className={`text-xs mt-0.5 ${dark ? "text-slate-400" : "text-slate-600"}`}>
+        <p className={`text-xs mt-0.5 ${dark ? "text-slate-400" : "text-indigo-800"}`}>
           {alert.alert_type === "ENTRY" ? "Entered" : "Exited"} <strong>{alert.geofence_name}</strong> · via {alert.notified_via}
         </p>
         <p className="text-xs text-slate-500 mt-0.5">{timeAgo(alert.triggered_at)}</p>
@@ -409,14 +409,14 @@ function AlertItem({ alert, onMarkRead, onDelete, dark }) {
 function DeviceRow({ device, dark }) {
   return (
     <tr className={`border-b text-sm transition-colors
-      ${dark ? "border-slate-800 hover:bg-slate-800/50" : "border-slate-100 hover:bg-slate-50"}`}>
+      ${dark ? "border-slate-800 hover:bg-slate-800/50" : "border-indigo-50 hover:bg-indigo-50/50"}`}>
       <td className="px-4 py-3">
         <div className="flex items-center gap-2">
           <span className={`w-2 h-2 rounded-full shadow-lg ${statusDot(device.status)}`} />
-          <span className={`font-medium ${dark ? "text-white" : "text-slate-900"}`}>{device.name}</span>
+          <span className={`font-medium ${dark ? "text-white" : "text-indigo-950"}`}>{device.name}</span>
         </div>
       </td>
-      <td className={`px-4 py-3 font-mono text-xs ${dark ? "text-slate-400" : "text-slate-500"}`}>{device.device_id}</td>
+      <td className={`px-4 py-3 font-mono text-xs ${dark ? "text-slate-400" : "text-indigo-500"}`}>{device.device_id}</td>
       <td className="px-4 py-3">
         <span className={`capitalize text-xs px-2 py-0.5 rounded-full
           ${device.type === "vehicle" ? "bg-blue-500/10 text-blue-400" : "bg-purple-500/10 text-purple-400"}`}>
@@ -431,8 +431,8 @@ function DeviceRow({ device, dark }) {
           {device.status}
         </span>
       </td>
-      <td className={`px-4 py-3 text-xs ${dark ? "text-slate-400" : "text-slate-500"}`}>{device.owner_name || "—"}</td>
-      <td className={`px-4 py-3 text-xs ${dark ? "text-slate-400" : "text-slate-500"}`}>{timeAgo(device.last_seen)}</td>
+      <td className={`px-4 py-3 text-xs ${dark ? "text-slate-400" : "text-indigo-500"}`}>{device.owner_name || "—"}</td>
+      <td className={`px-4 py-3 text-xs ${dark ? "text-slate-400" : "text-indigo-500"}`}>{timeAgo(device.last_seen)}</td>
     </tr>
   );
 }
@@ -454,7 +454,7 @@ function DashboardView({ devices, alerts, dark, markAlertAsReadInFirestore, dele
     { name: "Unknown", value: devices.length - insideCount - outsideCount, color: "#94a3b8" },
   ];
 
-  const labelStyle = dark ? "text-slate-400" : "text-slate-500";
+  const labelStyle = dark ? "text-slate-400" : "text-indigo-500";
 
   return (
     <motion.div
@@ -474,8 +474,8 @@ function DashboardView({ devices, alerts, dark, markAlertAsReadInFirestore, dele
       {/* Charts row */}
       <motion.div variants={itemVariants} className="grid grid-cols-1 xl:grid-cols-3 gap-4">
         {/* Activity line chart */}
-        <div className={`xl:col-span-2 rounded-xl border p-5 ${dark ? "bg-slate-900/10 backdrop-blur-sm border-slate-700/10" : "bg-white/10 backdrop-blur-sm border-slate-200/10"}`}>
-          <h3 className={`text-sm font-semibold mb-4 ${dark ? "text-white" : "text-slate-900"}`}>
+        <div className={`xl:col-span-2 rounded-xl border p-5 ${dark ? "bg-slate-900/10 backdrop-blur-sm border-slate-700/10" : "bg-white/70 backdrop-blur-md border-indigo-100/60 shadow-lg shadow-indigo-100/10"}`}>
+          <h3 className={`text-sm font-semibold mb-4 ${dark ? "text-white" : "text-indigo-950"}`}>
             Today's Activity <span className={`text-xs font-normal ${labelStyle}`}>— entries vs exits</span>
           </h3>
           <ResponsiveContainer width="100%" height={200}>
@@ -494,8 +494,8 @@ function DashboardView({ devices, alerts, dark, markAlertAsReadInFirestore, dele
         </div>
 
         {/* Pie chart */}
-        <div className={`rounded-xl border p-5 ${dark ? "bg-slate-900/10 backdrop-blur-sm border-slate-700/10" : "bg-white/10 backdrop-blur-sm border-slate-200/10"}`}>
-          <h3 className={`text-sm font-semibold mb-4 ${dark ? "text-white" : "text-slate-900"}`}>Fleet Status</h3>
+        <div className={`rounded-xl border p-5 ${dark ? "bg-slate-900/10 backdrop-blur-sm border-slate-700/10" : "bg-white/70 backdrop-blur-md border-indigo-100/60 shadow-lg shadow-indigo-100/10"}`}>
+          <h3 className={`text-sm font-semibold mb-4 ${dark ? "text-white" : "text-indigo-950"}`}>Fleet Status</h3>
           <ResponsiveContainer width="100%" height={200}>
             <PieChart>
               <Pie data={pieData} cx="50%" cy="50%" innerRadius={55} outerRadius={80} paddingAngle={3} dataKey="value">
@@ -509,9 +509,9 @@ function DashboardView({ devices, alerts, dark, markAlertAsReadInFirestore, dele
       </motion.div>
 
       {/* Recent alerts */}
-      <motion.div variants={itemVariants} className={`rounded-xl border p-5 ${dark ? "bg-slate-900/10 backdrop-blur-sm border-slate-700/10" : "bg-white/10 backdrop-blur-sm border-slate-200/10"}`}>
+      <motion.div variants={itemVariants} className={`rounded-xl border p-5 ${dark ? "bg-slate-900/10 backdrop-blur-sm border-slate-700/10" : "bg-white/70 backdrop-blur-md border-indigo-100/60 shadow-lg shadow-indigo-100/10"}`}>
         <div className="flex items-center justify-between mb-4">
-          <h3 className={`text-sm font-semibold ${dark ? "text-white" : "text-slate-900"}`}>Recent Alerts</h3>
+          <h3 className={`text-sm font-semibold ${dark ? "text-white" : "text-indigo-950"}`}>Recent Alerts</h3>
           <span className={`text-xs ${labelStyle}`}>{unreadCount} unread</span>
         </div>
         <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
@@ -556,13 +556,13 @@ function DevicesView({ devices, setDevices, dark, addDeviceToFirestore, deleteDe
   }
 
   const inputCls = `w-full px-3 py-2 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50
-    ${dark ? "bg-slate-800/10 border-slate-700/10 text-white placeholder-slate-500" : "bg-white/10 border-slate-300/10 text-slate-900 placeholder-slate-400"}`;
+    ${dark ? "bg-slate-800/10 border-slate-700/10 text-white placeholder-slate-500" : "bg-white/60 border-indigo-200/50 text-indigo-950 placeholder-indigo-400 shadow-sm"}`;
 
   return (
     <div className="space-y-5">
       {/* Header */}
       <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
-        <h2 className={`text-lg font-bold ${dark ? "text-white" : "text-slate-900"}`}>Fleet Devices</h2>
+        <h2 className={`text-lg font-bold ${dark ? "text-white" : "text-indigo-950"}`}>Fleet Devices</h2>
         <div className="flex gap-2">
           <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm flex-1
             ${dark ? "bg-slate-800/10 border-slate-700/10" : "bg-white/10 border-slate-200/10"}`}>
@@ -594,8 +594,8 @@ function DevicesView({ devices, setDevices, dark, addDeviceToFirestore, deleteDe
             transition={{ type: "spring", stiffness: 220, damping: 26 }}
             className="overflow-hidden"
           >
-            <form onSubmit={handleAdd} className={`rounded-xl border p-5 mb-5 ${dark ? "bg-slate-900/10 backdrop-blur-sm border-slate-700/10" : "bg-white/10 backdrop-blur-sm border-slate-200/10"}`}>
-              <h3 className={`text-sm font-semibold mb-4 ${dark ? "text-white" : "text-slate-900"}`}>Register New Device</h3>
+            <form onSubmit={handleAdd} className={`rounded-xl border p-5 mb-5 ${dark ? "bg-slate-900/10 backdrop-blur-sm border-slate-700/10" : "bg-white/70 backdrop-blur-md border-indigo-100/60 shadow-lg shadow-indigo-100/10"}`}>
+              <h3 className={`text-sm font-semibold mb-4 ${dark ? "text-white" : "text-indigo-950"}`}>Register New Device</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 <input required placeholder="Device ID (e.g. TRUCK-001)" value={form.device_id} onChange={e => setForm(f => ({...f, device_id: e.target.value}))} className={inputCls} />
                 <input required placeholder="Name (e.g. Alpha Hauler)"   value={form.name}      onChange={e => setForm(f => ({...f, name: e.target.value}))}      className={inputCls} />
@@ -616,9 +616,9 @@ function DevicesView({ devices, setDevices, dark, addDeviceToFirestore, deleteDe
                   {saving ? "Saving…" : "Save Device"}
                 </motion.button>
                 <motion.button type="button" onClick={() => setShowForm(false)}
-                  whileHover={{ scale: 1.02, backgroundColor: dark ? "rgba(51, 65, 85, 0.8)" : "rgba(226, 232, 240, 0.8)" }}
+                  whileHover={{ scale: 1.02, backgroundColor: dark ? "rgba(51, 65, 85, 0.8)" : "rgba(224, 231, 255, 0.8)" }}
                   whileTap={{ scale: 0.98 }}
-                  className={`px-4 py-2 rounded-lg text-sm transition-colors ${dark ? "bg-slate-800/10 text-slate-300" : "bg-slate-100/10 text-slate-700"}`}>
+                  className={`px-4 py-2 rounded-lg text-sm transition-colors ${dark ? "bg-slate-800/10 text-slate-300" : "bg-indigo-100/50 text-indigo-800"}`}>
                   Cancel
                 </motion.button>
               </div>
@@ -628,11 +628,11 @@ function DevicesView({ devices, setDevices, dark, addDeviceToFirestore, deleteDe
       </AnimatePresence>
 
       {/* Table */}
-      <div className={`rounded-xl border overflow-hidden ${dark ? "bg-slate-900/10 backdrop-blur-sm border-slate-700/10" : "bg-white/10 backdrop-blur-sm border-slate-200/10"}`}>
+      <div className={`rounded-xl border overflow-hidden ${dark ? "bg-slate-900/10 backdrop-blur-sm border-slate-700/10" : "bg-white/70 backdrop-blur-md border-indigo-100/60 shadow-lg shadow-indigo-100/10"}`}>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className={`text-xs uppercase tracking-wider ${dark ? "bg-slate-800/8 text-slate-400" : "bg-slate-50/8 text-slate-500"}`}>
+              <tr className={`text-xs uppercase tracking-wider ${dark ? "bg-slate-800/8 text-slate-400" : "bg-indigo-50/80 text-indigo-600"}`}>
                 {["Name", "Device ID", "Type", "Status", "Owner", "Last Seen", "Actions"].map(h => (
                   <th key={h} className="px-4 py-3 text-left font-semibold">{h}</th>
                 ))}
@@ -647,15 +647,15 @@ function DevicesView({ devices, setDevices, dark, addDeviceToFirestore, deleteDe
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ delay: Math.min(index * 0.04, 0.4), duration: 0.25, type: "spring", stiffness: 200, damping: 20 }}
-                  whileHover={{ scale: 1.002, backgroundColor: dark ? "rgba(30, 41, 59, 0.3)" : "rgba(241, 245, 249, 0.4)" }}
-                  key={d.id} className={`border-b text-sm transition-colors ${dark ? "border-slate-800" : "border-slate-100"}`}>
+                  whileHover={{ scale: 1.002, backgroundColor: dark ? "rgba(30, 41, 59, 0.3)" : "rgba(238, 242, 255, 0.7)" }}
+                  key={d.id} className={`border-b text-sm transition-colors ${dark ? "border-slate-800" : "border-indigo-50"}`}>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       <span className={`w-2 h-2 rounded-full shadow-lg ${statusDot(d.status)}`} />
-                      <span className={`font-medium ${dark ? "text-white" : "text-slate-900"}`}>{d.name}</span>
+                      <span className={`font-medium ${dark ? "text-white" : "text-indigo-950"}`}>{d.name}</span>
                     </div>
                   </td>
-                  <td className={`px-4 py-3 font-mono text-xs ${dark ? "text-slate-400" : "text-slate-500"}`}>{d.device_id}</td>
+                  <td className={`px-4 py-3 font-mono text-xs ${dark ? "text-slate-400" : "text-indigo-500"}`}>{d.device_id}</td>
                   <td className="px-4 py-3">
                     <span className={`capitalize text-xs px-2.5 py-0.5 rounded-full border font-medium
                       ${d.type === "vehicle" ? "bg-cyan-500/10 text-cyan-400 border-cyan-500/20" : d.type === "personnel" ? "bg-violet-500/10 text-violet-400 border-violet-500/20" : "bg-slate-500/10 text-slate-400 border-slate-500/20"}`}>
@@ -670,8 +670,8 @@ function DevicesView({ devices, setDevices, dark, addDeviceToFirestore, deleteDe
                       {d.status}
                     </span>
                   </td>
-                  <td className={`px-4 py-3 text-xs ${dark ? "text-slate-400" : "text-slate-500"}`}>{d.owner_name || "—"}</td>
-                  <td className={`px-4 py-3 text-xs ${dark ? "text-slate-400" : "text-slate-500"}`}>{timeAgo(d.last_seen)}</td>
+                  <td className={`px-4 py-3 text-xs ${dark ? "text-slate-400" : "text-indigo-500"}`}>{d.owner_name || "—"}</td>
+                  <td className={`px-4 py-3 text-xs ${dark ? "text-slate-400" : "text-indigo-500"}`}>{timeAgo(d.last_seen)}</td>
                   <td className="px-4 py-3">
                     <button onClick={() => handleDelete(d.id)} className="p-1.5 rounded-md text-red-400 hover:bg-red-500/10 transition-colors">
                       <Trash2 className="w-3.5 h-3.5" />
@@ -724,12 +724,12 @@ function GeofencesView({ geofences, setGeofences, dark, addGeofenceToFirestore, 
   }
 
   const inputCls = `w-full px-3 py-2 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50
-    ${dark ? "bg-slate-800/10 border-slate-700/10 text-white placeholder-slate-500" : "bg-white/10 border-slate-300/10 text-slate-900 placeholder-slate-400"}`;
+    ${dark ? "bg-slate-800/10 border-slate-700/10 text-white placeholder-slate-500" : "bg-white/60 border-indigo-200/50 text-indigo-950 placeholder-indigo-400 shadow-sm"}`;
 
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
-        <h2 className={`text-lg font-bold ${dark ? "text-white" : "text-slate-900"}`}>Geofences</h2>
+        <h2 className={`text-lg font-bold ${dark ? "text-white" : "text-indigo-950"}`}>Geofences</h2>
         <motion.button onClick={() => setShowForm(!showForm)}
           whileHover={{ scale: 1.03, y: -1, boxShadow: "0 10px 20px -5px rgba(6, 182, 212, 0.3)" }}
           whileTap={{ scale: 0.97 }}
@@ -747,8 +747,8 @@ function GeofencesView({ geofences, setGeofences, dark, addGeofenceToFirestore, 
             transition={{ type: "spring", stiffness: 220, damping: 26 }}
             className="overflow-hidden"
           >
-            <form onSubmit={handleAdd} className={`rounded-xl border p-5 mb-5 ${dark ? "bg-slate-900/10 backdrop-blur-sm border-slate-700/10" : "bg-white/10 backdrop-blur-sm border-slate-200/10"}`}>
-              <h3 className={`text-sm font-semibold mb-4 ${dark ? "text-white" : "text-slate-900"}`}>Create Geofence</h3>
+            <form onSubmit={handleAdd} className={`rounded-xl border p-5 mb-5 ${dark ? "bg-slate-900/10 backdrop-blur-sm border-slate-700/10" : "bg-white/70 backdrop-blur-md border-indigo-100/60 shadow-lg shadow-indigo-100/10"}`}>
+              <h3 className={`text-sm font-semibold mb-4 ${dark ? "text-white" : "text-indigo-950"}`}>Create Geofence</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 <input required placeholder="Name (e.g. Main Depot)" value={form.name} onChange={e => setForm(f=>({...f,name:e.target.value}))} className={inputCls} />
                 <input placeholder="Description" value={form.description} onChange={e => setForm(f=>({...f,description:e.target.value}))} className={inputCls} />
@@ -767,9 +767,9 @@ function GeofencesView({ geofences, setGeofences, dark, addGeofenceToFirestore, 
                   {saving ? "Saving…" : "Save Geofence"}
                 </motion.button>
                 <motion.button type="button" onClick={() => setShowForm(false)}
-                  whileHover={{ scale: 1.02, backgroundColor: dark ? "rgba(51, 65, 85, 0.8)" : "rgba(226, 232, 240, 0.8)" }}
+                  whileHover={{ scale: 1.02, backgroundColor: dark ? "rgba(51, 65, 85, 0.8)" : "rgba(224, 231, 255, 0.8)" }}
                   whileTap={{ scale: 0.98 }}
-                  className={`px-4 py-2 rounded-lg text-sm transition-colors ${dark ? "bg-slate-800/10 text-slate-300" : "bg-slate-100/10 text-slate-700"}`}>
+                  className={`px-4 py-2 rounded-lg text-sm transition-colors ${dark ? "bg-slate-800/10 text-slate-300" : "bg-indigo-100/50 text-indigo-800"}`}>
                   Cancel
                 </motion.button>
               </div>
@@ -790,13 +790,13 @@ function GeofencesView({ geofences, setGeofences, dark, addGeofenceToFirestore, 
               y: -6, 
               scale: 1.015,
               borderColor: dark ? "rgba(6, 182, 212, 0.4)" : "rgba(6, 182, 212, 0.3)",
-              boxShadow: dark ? "0 15px 35px -10px rgba(6,182,212,0.25)" : "0 15px 35px -10px rgba(0,0,0,0.12)" 
+              boxShadow: dark ? "0 15px 35px -10px rgba(6,182,212,0.25)" : "0 25px 50px -10px rgba(99,102,241,0.25)" 
             }}
-            key={g.id} className={`rounded-xl border p-5 transition-all ${dark ? "bg-slate-900/10 backdrop-blur-sm border-slate-700/10" : "bg-white/10 backdrop-blur-sm border-slate-200/10"}
+            key={g.id} className={`rounded-xl border p-5 transition-all ${dark ? "bg-slate-900/10 backdrop-blur-sm border-slate-700/10" : "bg-white/70 backdrop-blur-md border-indigo-100/60 shadow-lg shadow-indigo-100/10"}
             ${g.is_active ? "" : "opacity-60"}`}>
             <div className="flex items-start justify-between mb-3">
               <div>
-                <h3 className={`font-semibold text-sm ${dark ? "text-white" : "text-slate-900"}`}>{g.name}</h3>
+                <h3 className={`font-semibold text-sm ${dark ? "text-white" : "text-indigo-950"}`}>{g.name}</h3>
                 <p className={`text-xs mt-0.5 ${dark ? "text-slate-500" : "text-slate-500"}`}>{g.description || g.shape}</p>
               </div>
               <div className="flex gap-1">
@@ -814,12 +814,12 @@ function GeofencesView({ geofences, setGeofences, dark, addGeofenceToFirestore, 
                 </motion.button>
               </div>
             </div>
-            <div className={`space-y-1 text-xs ${dark ? "text-slate-400" : "text-slate-500"}`}>
+            <div className={`space-y-1 text-xs ${dark ? "text-slate-400" : "text-indigo-500"}`}>
               <p><span className="font-medium">Shape:</span> {g.shape}</p>
               {g.center_lat && <p><span className="font-medium">Center:</span> {parseFloat(g.center_lat).toFixed(4)}, {parseFloat(g.center_lng).toFixed(4)}</p>}
               {g.radius_m   && <p><span className="font-medium">Radius:</span> {g.radius_m}m</p>}
             </div>
-            <div className={`mt-3 pt-3 border-t ${dark ? "border-slate-800" : "border-slate-100"}`}>
+            <div className={`mt-3 pt-3 border-t ${dark ? "border-slate-800" : "border-indigo-50"}`}>
               <span className={`text-xs font-medium px-2 py-0.5 rounded-full
                 ${g.is_active ? "text-emerald-400 bg-emerald-500/10" : "text-slate-400 bg-slate-500/10"}`}>
                 {g.is_active ? "● Active" : "○ Inactive"}
@@ -872,7 +872,7 @@ function AlertsView({ alerts, setAlerts, dark, markAlertAsReadInFirestore, delet
   return (
     <div className="space-y-5">
       <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
-        <h2 className={`text-lg font-bold ${dark ? "text-white" : "text-slate-900"}`}>
+        <h2 className={`text-lg font-bold ${dark ? "text-white" : "text-indigo-950"}`}>
           Alert Log <span className={`text-sm font-normal ml-2 ${dark ? "text-slate-500" : "text-slate-400"}`}>{filtered.length} alerts</span>
         </h2>
         <div className="flex gap-2 items-center flex-wrap">
@@ -889,7 +889,7 @@ function AlertsView({ alerts, setAlerts, dark, markAlertAsReadInFirestore, delet
 
       {/* Search */}
       <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm
-        ${dark ? "bg-slate-900/10 backdrop-blur-sm border-slate-700/10" : "bg-white/10 backdrop-blur-sm border-slate-200/10"}`}>
+        ${dark ? "bg-slate-900/10 backdrop-blur-sm border-slate-700/10" : "bg-white/70 backdrop-blur-md border-indigo-100/60 shadow-lg shadow-indigo-100/10"}`}>
         <Search className="w-4 h-4 text-slate-400" />
         <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search device or geofence…"
           className={`bg-transparent outline-none flex-1 ${dark ? "text-white placeholder-slate-500" : "text-slate-900 placeholder-slate-400"}`} />
@@ -913,7 +913,7 @@ function AlertsView({ alerts, setAlerts, dark, markAlertAsReadInFirestore, delet
             <div className="mt-1">{alertIcon(a.alert_type)}</div>
             <div className="flex-1">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className={`font-semibold text-sm ${dark ? "text-white" : "text-slate-900"}`}>{a.device_name}</span>
+                <span className={`font-semibold text-sm ${dark ? "text-white" : "text-indigo-950"}`}>{a.device_name}</span>
                 <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${priorityColor(a.priority)}`}>{a.priority}</span>
                 <span className={`text-xs px-2 py-0.5 rounded-full font-medium
                   ${a.alert_type === "ENTRY" ? "bg-emerald-500/10 text-emerald-400" : "bg-red-500/10 text-red-400"}`}>
@@ -921,7 +921,7 @@ function AlertsView({ alerts, setAlerts, dark, markAlertAsReadInFirestore, delet
                 </span>
                 {!a.is_read && <span className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse" />}
               </div>
-              <p className={`text-xs mt-1 ${dark ? "text-slate-400" : "text-slate-600"}`}>
+              <p className={`text-xs mt-1 ${dark ? "text-slate-400" : "text-indigo-800"}`}>
                 {a.alert_type === "ENTRY" ? "Entered" : "Exited"} <strong>{a.geofence_name}</strong>
                 {a.notified_via && a.notified_via !== "none" && <> · Notified via <span className="text-cyan-400">{a.notified_via}</span></>}
               </p>
@@ -983,7 +983,7 @@ function AIView({ alerts, dark }) {
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className={`text-lg font-bold ${dark ? "text-white" : "text-slate-900"}`}>AI Operations Report</h2>
+          <h2 className={`text-lg font-bold ${dark ? "text-white" : "text-indigo-950"}`}>AI Operations Report</h2>
           <p className={`text-xs mt-0.5 ${dark ? "text-slate-500" : "text-slate-400"}`}>Powered by Gemini 1.5 Flash · Today's alerts summary</p>
         </div>
         <button onClick={generateReport} disabled={loading}
@@ -1007,35 +1007,35 @@ function AIView({ alerts, dark }) {
       )}
 
       {loading && (
-        <div className={`rounded-xl border p-10 text-center ${dark ? "bg-slate-900/10 backdrop-blur-sm border-slate-700/10" : "bg-white/10 backdrop-blur-sm border-slate-200/10"}`}>
+        <div className={`rounded-xl border p-10 text-center ${dark ? "bg-slate-900/10 backdrop-blur-sm border-slate-700/10" : "bg-white/70 backdrop-blur-md border-indigo-100/60 shadow-lg shadow-indigo-100/10"}`}>
           <div className="relative w-16 h-16 mx-auto mb-4">
             <div className="w-16 h-16 rounded-full border-4 border-slate-200 border-t-cyan-500 animate-spin absolute inset-0" />
             <Cpu className="w-6 h-6 text-cyan-400 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
           </div>
-          <p className={`text-sm ${dark ? "text-slate-400" : "text-slate-500"}`}>AI is analyzing {alerts.length} alerts…</p>
+          <p className={`text-sm ${dark ? "text-slate-400" : "text-indigo-500"}`}>AI is analyzing {alerts.length} alerts…</p>
         </div>
       )}
 
       {report && !loading && (
         <div className="space-y-4">
           {/* Summary card */}
-          <div className={`rounded-xl border p-6 ${dark ? "bg-slate-900/10 backdrop-blur-sm border-slate-700/10" : "bg-white/10 backdrop-blur-sm border-slate-200/10"}`}>
+          <div className={`rounded-xl border p-6 ${dark ? "bg-slate-900/10 backdrop-blur-sm border-slate-700/10" : "bg-white/70 backdrop-blur-md border-indigo-100/60 shadow-lg shadow-indigo-100/10"}`}>
             <div className="flex items-center gap-2 mb-3">
               <div className="w-6 h-6 rounded-md bg-cyan-500/20 flex items-center justify-center">
                 <TrendingUp className="w-3.5 h-3.5 text-cyan-400" />
               </div>
-              <h3 className={`text-sm font-semibold ${dark ? "text-white" : "text-slate-900"}`}>Executive Summary</h3>
+              <h3 className={`text-sm font-semibold ${dark ? "text-white" : "text-indigo-950"}`}>Executive Summary</h3>
             </div>
             <p className={`text-sm leading-relaxed ${dark ? "text-slate-300" : "text-slate-700"}`}>{report.summary}</p>
           </div>
 
           {/* Suggestions */}
-          <div className={`rounded-xl border p-6 ${dark ? "bg-slate-900/10 backdrop-blur-sm border-slate-700/10" : "bg-white/10 backdrop-blur-sm border-slate-200/10"}`}>
+          <div className={`rounded-xl border p-6 ${dark ? "bg-slate-900/10 backdrop-blur-sm border-slate-700/10" : "bg-white/70 backdrop-blur-md border-indigo-100/60 shadow-lg shadow-indigo-100/10"}`}>
             <div className="flex items-center gap-2 mb-4">
               <div className="w-6 h-6 rounded-md bg-blue-500/20 flex items-center justify-center">
                 <CheckCircle className="w-3.5 h-3.5 text-blue-400" />
               </div>
-              <h3 className={`text-sm font-semibold ${dark ? "text-white" : "text-slate-900"}`}>Recommended Actions</h3>
+              <h3 className={`text-sm font-semibold ${dark ? "text-white" : "text-indigo-950"}`}>Recommended Actions</h3>
             </div>
             <div className="space-y-3">
               {(report.suggestions || []).map((s, i) => (
@@ -1098,11 +1098,11 @@ function ExportView({ alerts, devices, dark, clearLocationLogsInFirestore }) {
     }
   }
 
-  const cardCls = `rounded-xl border p-6 ${dark ? "bg-slate-900/10 backdrop-blur-sm border-slate-700/10" : "bg-white/10 backdrop-blur-sm border-slate-200/10"}`;
+  const cardCls = `rounded-xl border p-6 ${dark ? "bg-slate-900/10 backdrop-blur-sm border-slate-700/10" : "bg-white/70 backdrop-blur-md border-indigo-100/60 shadow-lg shadow-indigo-100/10"}`;
 
   return (
     <div className="space-y-5">
-      <h2 className={`text-lg font-bold ${dark ? "text-white" : "text-slate-900"}`}>Export & Maintenance</h2>
+      <h2 className={`text-lg font-bold ${dark ? "text-white" : "text-indigo-950"}`}>Export & Maintenance</h2>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {/* CSV export */}
@@ -1110,7 +1110,7 @@ function ExportView({ alerts, devices, dark, clearLocationLogsInFirestore }) {
           <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center mb-4">
             <FileDown className="w-5 h-5 text-emerald-400" />
           </div>
-          <h3 className={`font-semibold text-sm mb-1 ${dark ? "text-white" : "text-slate-900"}`}>Alerts CSV Export</h3>
+          <h3 className={`font-semibold text-sm mb-1 ${dark ? "text-white" : "text-indigo-950"}`}>Alerts CSV Export</h3>
           <p className={`text-xs mb-4 ${dark ? "text-slate-500" : "text-slate-500"}`}>Download all {alerts.length} alerts as a CSV file for spreadsheet analysis.</p>
           <div className="flex gap-2">
             <button onClick={downloadCSV}
@@ -1119,7 +1119,7 @@ function ExportView({ alerts, devices, dark, clearLocationLogsInFirestore }) {
             </button>
             <button onClick={downloadFromServer}
               className={`px-4 py-2 rounded-lg text-xs font-medium transition-colors
-                ${dark ? "bg-slate-800/10 hover:bg-slate-700/50 text-slate-300" : "bg-slate-100/10 hover:bg-slate-200/50 text-slate-700"}`}>
+                ${dark ? "bg-slate-800/10 hover:bg-slate-700/50 text-slate-300" : "bg-slate-100/10 hover:bg-indigo-100/50 text-slate-700"}`}>
               Via Server API
             </button>
           </div>
@@ -1130,7 +1130,7 @@ function ExportView({ alerts, devices, dark, clearLocationLogsInFirestore }) {
           <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center mb-4">
             <Truck className="w-5 h-5 text-blue-400" />
           </div>
-          <h3 className={`font-semibold text-sm mb-1 ${dark ? "text-white" : "text-slate-900"}`}>Device Status CSV</h3>
+          <h3 className={`font-semibold text-sm mb-1 ${dark ? "text-white" : "text-indigo-950"}`}>Device Status CSV</h3>
           <p className={`text-xs mb-4 ${dark ? "text-slate-500" : "text-slate-500"}`}>Export current status of all {devices.length} fleet devices with last seen time.</p>
           <button onClick={() => exportCSV(devices.map(d => ({
             ID: d.id, DeviceID: d.device_id, Name: d.name, Type: d.type,
@@ -1146,7 +1146,7 @@ function ExportView({ alerts, devices, dark, clearLocationLogsInFirestore }) {
           <div className="w-10 h-10 rounded-lg bg-red-500/10 flex items-center justify-center mb-4">
             <Trash2 className="w-5 h-5 text-red-400" />
           </div>
-          <h3 className={`font-semibold text-sm mb-1 ${dark ? "text-white" : "text-slate-900"}`}>Clear Location Logs</h3>
+          <h3 className={`font-semibold text-sm mb-1 ${dark ? "text-white" : "text-indigo-950"}`}>Clear Location Logs</h3>
           <p className={`text-xs mb-4 ${dark ? "text-slate-500" : "text-slate-500"}`}>Permanently delete all historic location telemetry records from the database.</p>
           <button onClick={handleClearLogs} disabled={clearing}
             className="px-4 py-2 rounded-lg bg-red-500 hover:bg-red-400 text-white text-xs font-medium transition-colors disabled:opacity-50">
@@ -1157,7 +1157,7 @@ function ExportView({ alerts, devices, dark, clearLocationLogsInFirestore }) {
 
       {/* Summary table */}
       <div className={cardCls}>
-        <h3 className={`font-semibold text-sm mb-4 ${dark ? "text-white" : "text-slate-900"}`}>Quick Stats Preview</h3>
+        <h3 className={`font-semibold text-sm mb-4 ${dark ? "text-white" : "text-indigo-950"}`}>Quick Stats Preview</h3>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
           {[
             { label: "Total Alerts",    value: alerts.length },
@@ -1166,7 +1166,7 @@ function ExportView({ alerts, devices, dark, clearLocationLogsInFirestore }) {
             { label: "Critical Events", value: alerts.filter(a => a.priority === "critical").length },
           ].map(({ label, value }) => (
             <div key={label} className={`p-3 rounded-lg ${dark ? "bg-slate-800/10" : "bg-slate-50/50 backdrop-blur-sm"}`}>
-              <p className={`text-2xl font-bold ${dark ? "text-white" : "text-slate-900"}`}>{value}</p>
+              <p className={`text-2xl font-bold ${dark ? "text-white" : "text-indigo-950"}`}>{value}</p>
               <p className={`text-xs mt-0.5 ${dark ? "text-slate-500" : "text-slate-500"}`}>{label}</p>
             </div>
           ))}
@@ -1176,7 +1176,7 @@ function ExportView({ alerts, devices, dark, clearLocationLogsInFirestore }) {
       {/* Simulate device ping */}
       <div className={`rounded-xl border border-cyan-500/20 p-6 ${dark ? "bg-cyan-500/5" : "bg-cyan-50"}`}>
         <h3 className="text-sm font-semibold text-cyan-400 mb-2">🛰 Test: Simulate GPS Ping</h3>
-        <p className={`text-xs mb-4 ${dark ? "text-slate-400" : "text-slate-600"}`}>
+        <p className={`text-xs mb-4 ${dark ? "text-slate-400" : "text-indigo-800"}`}>
           Send a test GPS coordinate to the backend. This simulates a real device checking in.
         </p>
         <SimulatePing dark={dark} />
@@ -1219,7 +1219,7 @@ function SimulatePing({ dark }) {
         </button>
       </div>
       {res && (
-        <pre className={`text-xs p-3 rounded-lg overflow-x-auto ${dark ? "bg-slate-800/10 text-slate-300" : "bg-slate-100/10 text-slate-700"}`}>
+        <pre className={`text-xs p-3 rounded-lg overflow-x-auto ${dark ? "bg-slate-800/10 text-slate-300" : "bg-indigo-100/50 text-indigo-800"}`}>
           {JSON.stringify(res, null, 2)}
         </pre>
       )}
@@ -1391,8 +1391,13 @@ function LoginView({ onLogin, dark, setDark }) {
 
   return (
     <div className="relative min-h-screen w-full flex flex-col justify-center items-center overflow-hidden">
+      {/* 3D Earth Globe Background */}
+      <div className="absolute inset-0 z-0 pointer-events-none opacity-60">
+        <EarthGlobe isBackground={true} />
+      </div>
+      
       {/* Particle Canvas Background */}
-      <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />
+      <canvas ref={canvasRef} className="absolute inset-0 w-full h-full z-0 opacity-50" />
 
       {/* Theme Toggle */}
       <button 
@@ -1410,7 +1415,7 @@ function LoginView({ onLogin, dark, setDark }) {
         className={`relative z-10 w-full max-w-md p-8 rounded-2xl border shadow-2xl backdrop-blur-xl transition-colors duration-300 ${
           dark 
             ? "bg-slate-900/70 border-slate-700/50 shadow-cyan-500/5" 
-            : "bg-white/70 border-slate-200 shadow-slate-300/30"
+            : "bg-white/80 border-indigo-100 shadow-indigo-200/40"
         }`}
       >
         <div className="flex flex-col items-center mb-6">
@@ -1422,8 +1427,8 @@ function LoginView({ onLogin, dark, setDark }) {
           >
             <Shield className="w-7 h-7 text-white" />
           </motion.div>
-          <h2 className={`text-xl font-bold tracking-tight ${dark ? "text-white" : "text-slate-900"}`}>Access Control</h2>
-          <p className={`text-xs mt-1 ${dark ? "text-slate-400" : "text-slate-500"}`}>
+          <h2 className={`text-xl font-bold tracking-tight ${dark ? "text-white" : "text-indigo-950"}`}>Access Control</h2>
+          <p className={`text-xs mt-1 ${dark ? "text-slate-400" : "text-indigo-500"}`}>
             Please authenticate to access the Geofence Dashboard
           </p>
         </div>
@@ -1441,7 +1446,7 @@ function LoginView({ onLogin, dark, setDark }) {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className={`block text-xs font-semibold uppercase mb-1.5 ${dark ? "text-slate-400" : "text-slate-600"}`}>
+            <label className={`block text-xs font-semibold uppercase mb-1.5 ${dark ? "text-slate-400" : "text-indigo-800"}`}>
               Username
             </label>
             <div className="relative">
@@ -1457,14 +1462,14 @@ function LoginView({ onLogin, dark, setDark }) {
                 className={`w-full pl-9 pr-3 py-2.5 text-sm rounded-xl border outline-none transition-all ${
                   dark
                     ? "bg-slate-950/50 border-slate-700 text-white placeholder:text-slate-600 focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30"
-                    : "bg-white/50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20"
+                    : "bg-white/60 border-indigo-200 text-indigo-950 placeholder:text-indigo-400 shadow-sm focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20"
                 }`}
               />
             </div>
           </div>
 
           <div>
-            <label className={`block text-xs font-semibold uppercase mb-1.5 ${dark ? "text-slate-400" : "text-slate-600"}`}>
+            <label className={`block text-xs font-semibold uppercase mb-1.5 ${dark ? "text-slate-400" : "text-indigo-800"}`}>
               Password
             </label>
             <div className="relative">
@@ -1480,7 +1485,7 @@ function LoginView({ onLogin, dark, setDark }) {
                 className={`w-full pl-9 pr-10 py-2.5 text-sm rounded-xl border outline-none transition-all ${
                   dark
                     ? "bg-slate-950/50 border-slate-700 text-white placeholder:text-slate-600 focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30"
-                    : "bg-white/50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20"
+                    : "bg-white/60 border-indigo-200 text-indigo-950 placeholder:text-indigo-400 shadow-sm focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20"
                 }`}
               />
               <button
@@ -1699,7 +1704,7 @@ export default function App() {
   }
 
   return (
-    <div className={`relative flex min-h-screen overflow-hidden ${dark ? "bg-slate-950 text-white" : "bg-slate-50 text-slate-900"}`}>
+    <div className={`relative flex min-h-screen overflow-hidden ${dark ? "bg-slate-950 text-white" : "bg-indigo-50 text-indigo-950"}`}>
       {/* 3D Earth Globe Background */}
       <div className="absolute inset-0 z-0 pointer-events-none opacity-80">
         <EarthGlobe isBackground={true} />
@@ -1752,7 +1757,7 @@ export default function App() {
             {isMobile && (
               <button
                 onClick={() => setMobileMenuOpen(true)}
-                className={`p-2 rounded-lg transition-colors pointer-events-auto ${dark ? "hover:bg-slate-800 text-slate-400" : "hover:bg-slate-100 text-slate-500"}`}
+                className={`p-2 rounded-lg transition-colors pointer-events-auto ${dark ? "hover:bg-slate-800 text-slate-400" : "hover:bg-indigo-50 text-slate-500"}`}
               >
                 <Menu className="w-5 h-5" />
               </button>
@@ -1760,7 +1765,7 @@ export default function App() {
 
             {/* Breadcrumb */}
           <div>
-            <h1 className={`text-base font-semibold capitalize ${dark ? "text-white" : "text-slate-900"}`}>
+            <h1 className={`text-base font-semibold capitalize ${dark ? "text-white" : "text-indigo-950"}`}>
               {activeView === "ai" ? "AI Report" : activeView}
             </h1>
             <p className={`text-xs ${dark ? "text-slate-500" : "text-slate-400"}`}>
@@ -1795,7 +1800,7 @@ export default function App() {
 
             {/* Refresh — Real-time listeners active */}
             <button disabled
-              className={`p-2 rounded-lg transition-colors opacity-50 ${dark ? "text-slate-400" : "text-slate-500"}`}>
+              className={`p-2 rounded-lg transition-colors opacity-50 ${dark ? "text-slate-400" : "text-indigo-500"}`}>
               <RefreshCw className="w-4 h-4" />
             </button>
           </div>
